@@ -1,0 +1,58 @@
+# Import dataset from Kaggle
+import os
+os.environ['KAGGLE_USERNAME'] = "vinhnguyen94" # username from the json file
+os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the json file
+!kaggle competitions download -c hecmontrealdeeplearningcourse # api copied from kaggle
+
+# Datasets into Dataframe
+train = pd.read_csv("train.csv")
+
+# Merge 2 dataframes using the same column
+new_train = pd.merge(train, text1, on='id', how='inner')
+
+# Plot train labels
+import matplotlib.pyplot as plt
+import seaborn as sns
+sns.countplot(df_train.label)
+plt.xlabel('Label')
+plt.title('Label distribution')
+
+# Functions for preprocessing
+from nltk.tokenize import word_tokenize
+from nltk.corpus import stopwords, wordnet
+from nltk.stem import WordNetLemmatizer
+nltk.download("punkt")
+nltk.download("stopwords")
+nltk.download('averaged_perceptron_tagger')
+nltk.download('wordnet')
+def get_wordnet_pos(pos_tag):
+    output = np.asarray(pos_tag)
+    for i in range(len(pos_tag)):
+        if pos_tag[i][1].startswith('J'):
+            output[i][1] = wordnet.ADJ
+        elif pos_tag[i][1].startswith('V'):
+            output[i][1] = wordnet.VERB
+        elif pos_tag[i][1].startswith('R'):
+            output[i][1] = wordnet.ADV
+        else:
+            output[i][1] = wordnet.NOUN
+    return output
+
+def preprocessing_sentence(sentence):
+    tokens = word_tokenize(sentence)
+    tokens = [t.lower() for t in tokens if t.isalpha()]
+    tokens = [t for t in tokens if t not in stopwords.words("english")]
+    words_tagged = nltk.pos_tag(tokens)
+    tags = get_wordnet_pos(words_tagged)
+    lemmatizer = WordNetLemmatizer()
+    lemmatized_sentence = [lemmatizer.lemmatize(w_t[0], pos=w_t[1]) for w_t in tags]
+    return lemmatized_sentence
+    
+    
+# Preprocessing on the train set
+df_train["tokens"] = df_train.title.apply(preprocessing_sentence) # create a new column "tokens" with the preprocessed titles
+df_train    
+
+# State clearly the X and y variables
+X = df_train.tokens
+y = df_train.label
