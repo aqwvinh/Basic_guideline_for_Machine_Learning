@@ -37,3 +37,10 @@ df_train
 # State clearly the X and y variables
 X = df_train.tokens
 y = df_train.label
+
+# label encode the target variable, after the test split
+encoder = preprocessing.LabelEncoder()
+y_train = encoder.fit_transform(y_train)
+y_valid = encoder.fit_transform(y_valid)
+
+
