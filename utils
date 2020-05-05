@@ -17,3 +17,7 @@ sns.countplot(df_train.label)
 plt.xlabel('Label')
 plt.title('Label distribution')
 
+# split the dataset into training and validation datasets
+from sklearn import model_selection
+X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
+                                                   stratify=y) #random_state to have the same alea and strafify to have a balance in label
