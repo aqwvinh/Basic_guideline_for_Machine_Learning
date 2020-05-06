@@ -41,9 +41,9 @@ g.map(plt.hist, 'X', bins=20) # Call plotting function .map with interval of 20 
 train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascending = False)
 
 # Create ranges of age for plotting
-train['Age_bins']=pd.cut(x=train['Age'], bins=[0,19, 39, 59,79], labels=['0-10s','20-30s','40-50s','60-70s'])
+train['Age_bins']=pd.cut(x=train['Age'], bins=[0,19, 39, 59,79], labels=['0-10s','20-30s','40-50s','60-70s']) # number of labels should be one less than bins
 train.groupby(["Age_bins"]).mean()
-
+pd.crosstab(train.Age_bins, train.Survived).plot(kind="bar") #Survived = target
 
 
 
