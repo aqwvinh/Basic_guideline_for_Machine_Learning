@@ -21,6 +21,9 @@ sns.countplot(df_train.label)
 plt.xlabel('Label')
 plt.title('Label distribution')
 
+# Correlation between Gender and Target using the mean
+train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascending = False)
+
 # split the dataset into training and validation datasets
 from sklearn import model_selection
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
