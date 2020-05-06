@@ -8,11 +8,17 @@ os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the jso
 On Mac: open new window terminal, slide the data and copy the path
 train = pd.read_csv("train.csv")
 
+train.head()
+train.describe() // train.describe(include = ['O']) if we want only the strings information. include = 'all' is possible
+
 Spend time to study the data:
 - % of train data
 - label distribution
 - features correlation
 - convert strings into floats
+- we have to drop, classify and create features
+- observations then decisions
+
 
 # Merge 2 dataframes using the same column
 new_train = pd.merge(train, text1, on='id', how='inner')
@@ -27,8 +33,20 @@ sns.countplot(df_train.label)
 plt.xlabel('Label')
 plt.title('Label distribution')
 
+# Multiple plots
+g = sns.FacetGrid(train, col='y') # Initialize the FacetGrid with the data (train) and the target var
+g.map(plt.hist, 'X', bins=20) # Call plotting function .map with interval of 20 (for age for ex)
+
 # Correlation between Gender and Target using the mean
 train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascending = False)
+
+# Create ranges of age for plotting
+train['Age_bins']=pd.cut(x=train['Age'], bins=[0,19, 39, 59,79], labels=['0-10s','20-30s','40-50s','60-70s'])
+train.groupby(["Age_bins"]).mean()
+
+
+
+
 
 # split the dataset into training and validation datasets
 from sklearn import model_selection
