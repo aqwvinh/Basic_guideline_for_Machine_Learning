@@ -8,6 +8,12 @@ os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the jso
 On Mac: open new window terminal, slide the data and copy the path
 train = pd.read_csv("train.csv")
 
+Spend time to study the data:
+- % of train data
+- label distribution
+- features correlation
+- convert strings into floats
+
 # Merge 2 dataframes using the same column
 new_train = pd.merge(train, text1, on='id', how='inner')
 
