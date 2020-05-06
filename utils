@@ -5,6 +5,7 @@ os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the jso
 !kaggle competitions download -c hecmontrealdeeplearningcourse # api copied from kaggle
 
 # Datasets into Dataframe
+On Mac: open new window terminal, slide the data and copy the path
 train = pd.read_csv("train.csv")
 
 # Merge 2 dataframes using the same column
