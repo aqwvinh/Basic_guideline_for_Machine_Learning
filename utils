@@ -21,3 +21,33 @@ plt.title('Label distribution')
 from sklearn import model_selection
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
                                                    stratify=y) #random_state to have the same alea and strafify to have a balance in label
+
+# Model building. Following function is used to train a model and to compute the accuracy score
+def train_model(classifier, train_vector, train_labels, valid_vector, valid_labels, is_neural_net=False):
+    # fit the training dataset on the classifier
+    classifier.fit(train_vector, train_labels)
+    
+    # predict the labels on validation dataset
+    predictions = classifier.predict(valid_vector)
+    
+    if is_neural_net:
+        predictions = predictions.argmax(axis=-1)
+    
+    return metrics.accuracy_score(predictions, valid_labels)
+    
+# Training with log reg
+from sklearn import linear_model
+accuracy = train_model(linear_model.LogisticRegression(random_state=0, penalty = "l2", solver='newton-cg', max_iter =200, C=1.6), X_train, y_train, X_valid, y_valid)
+print ("LR : ", accuracy) 
+
+# Gridsearch for log reg
+from sklearn import model_selection
+param_grid = {'C': [0.1,1,10],
+              'solver': ['newton-cg', 'saga', 'lbfgs']
+              } 
+ 
+clf = model_selection.GridSearchCV(linear_model.LogisticRegression(), param_grid = param_grid, cv = 2, verbose=True, n_jobs=-1)
+
+# Fit on train and predict on test
+best_model = clf.fit(X_train, y_train)
+y_pred = best_model.predict(X_test)
