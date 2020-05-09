@@ -1,0 +1,100 @@
+### ENCODING
+FIT ONLY ON TRAIN SET cuz overfitting otherwise. Hint: fit_transform --> train. So fit on train and then transform on train,val and test
+
+## Convert categorical variables into integers using LabelEncoder (for when there are several different names). It can already be integers but need to encode them into labels for new features
+// Essential to encode categorical vars into numerical for the algorithms. Missing values treatment before
+from sklearn.preprocessing import LabelEncoder
+cat_features = ['ip', 'app', 'device', 'os', 'channel'] # Categories to encode
+encoder = LabelEncoder()
+for feature in cat_features: # Goal is to create new features in the same dataframe. Name format should be "feature_labels"
+    encoded = encoder.fit_transform(df[feature]) # Apply the label encoder to each column
+    df[feature+'_labels'] = encoded
+ 
+// Then you have to one-hot encode if the features are multi-class but no if too many classes --> use LightGBM model then. 
+
+## Statistics encoder so fit only on train set
+# Count encoder: replaces each categorical value with the number of times it appears in the dataset. The common/important values get their own grouping
+import category_encoders as ce
+    # Create the count encoder
+    count_enc = ce.CountEncoder(cols=cat_features)
+    # Learn encoding from the training set
+    count_enc.fit(train[cat_features])
+    # Apply encoding to the train and validation sets and add suffix "_count". You can join two dataframes with the same index using .join
+    train_encoded = train.join(count_enc.transform(train[cat_features]).add_suffix('_count'))
+    valid_encoded = valid.join(count_enc.transform(valid[cat_features]).add_suffix('_count'))
+
+# Target encoding: replaces a categorical value with the average value of the target. FIT ONLY ON TRAIN SET
+target_encoder = ce.TargetEncoder(cols=cat_features)
+target_encoder.fit(train[cat_features], train['target'])    # Fit the encoder using the categorical features and target
+train_encoded = train.join(target_encoder.transform(train[cat_features]).add_suffix("_target"))   # Apply the encoder
+// Same for Catboost. Better with lightGBM
+
+
+# Add new columns for timestamp features day, hour, minute, and second so we can use time in the model
+df['day'] = df['time'].dt.day.astype('uint8')
+df['hour'] = df['time'].dt.hour.astype('uint8') #etc for minute and second. Important to convert time into categorical feature
+
+
+# Train with lightGBM (after manual split)
+import lightgbm as lgb
+dtrain = lgb.Dataset(train[feature_cols], label=train['target'])  # feature_cols = ["x1", "x2", etc]
+dvalid = lgb.Dataset(valid[feature_cols], label=valid['target'])
+dtest = lgb.Dataset(test[feature_cols], label=test['target'])
+param = {'num_leaves': 64, 'objective': 'binary'}
+param['metric'] = 'auc'
+num_round = 1000
+bst = lgb.train(param, dtrain, num_round, valid_sets=[dvalid], early_stopping_rounds=10)
+
+
+### Feature engineering to create new variables
+// Do interaction between categorical variables to have more information
+interactions = df['category'] + "_" + ks['country'] --> "Poetry_GB" or "NarrativeFilm_US"  # Then label encode 
+
+# Add interaction features for each pair of categorical features using itertools and encode them
+import itertools
+cat_features = ['ip', 'app', 'device', 'os', 'channel']
+interactions = pd.DataFrame(index=clicks.index)  # df = clicks
+for col1,col2 in itertools.combinations(cat_features, 2):    # Iterate through each pair of features, combine them into interaction features
+    new_col_name = "_".join([col1,col2])  
+    new_values = clicks[col1].map(str) + "_" + clicks[col2].map(str)  # join the values as strings with an underscore
+    
+    encoder = preprocessing.LabelEncoder()
+    interactions[new_col_name] = encoder.fit_transform(new_values)
+    
+ 
+### FEATURE SELECTION. Two methods: univariate (for small data) and feature selection with L1 regularization (more powerful but slow)
+# Univariate feature selection: measure how strongly the target depends on a feature. ON TRAIN SET
+// Use feature_selection.SelectKBest --> returns the K best features given some scoring function. Ex: F-value (f_classif) measures the linear dependency between the feature variable and the target. This means the score might underestimate the relation between a feature and the target if the relationship is nonlinear
+
+from sklearn.feature_selection import SelectKBest, f_classif
+feature_cols = df.columns.drop('target')   # Keep only features columns
+selector = SelectKBest(f_classif, k=5)  # Keep 5 features and use F-value
+X_new = selector.fit_transform(train[feature_cols], train['target'])  # ONLY ON TRAIN SET
+// At this stage, we have an array with 5 features but it's not clear which ones we've kept. So we need to inverse_transform
+
+# L1 regularization (Lasso)
+from sklearn.linear_model import LogisticRegression (classification), Lasso (regression pb)
+from sklearn.feature_selection import SelectFromModel
+X, y = train[train.columns.drop("target")], train['target']
+logistic = LogisticRegression(C=1, penalty="l1", random_state=7).fit(X, y)  # Set the regularization parameter C=1
+model = SelectFromModel(logistic, prefit=True)
+X_new = model.transform(X)
+
+# Get back the features we've kept and set zero for all other features
+selected_features = pd.DataFrame(selector/model.inverse_transform(X_new), 
+                                 index=train.index, 
+                                 columns=feature_cols)
+# Dropped columns have values of all 0s, so var is 0, drop them
+selected_columns = selected_features.columns[selected_features.var() != 0]
+
+--> Function for Lasso: to give the selected features
+def select_features_l1(X, y):
+    """ Return selected features using logistic regression with an L1 penalty """
+    logistic = LogisticRegression(C=0.1, penalty="l1", random_state=7).fit(X, y)  
+    model = SelectFromModel(logistic, prefit=True)
+    X_new = model.transform(X)
+    selected_features = pd.DataFrame(model.inverse_transform(X_new), 
+                                 index=X.index, 
+                                 columns=X.columns)
+    selected_columns = selected_features.columns[selected_features.var() != 0]
+    return selected_columns
