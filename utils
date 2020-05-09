@@ -153,6 +153,16 @@ from sklearn import model_selection
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
                                                    stratify=y) #random_state to have the same alea and strafify to have a balance in label
 
+# Manually do the split
+# train = 80% first rows, then valid = 10% and finally test = 10%. Order matters here
+valid_fraction = 0.1
+df_srt = df.sort_values('click_time') # Wanna order depending on click_time
+valid_rows = int(len(df_srt) * valid_fraction)
+train = df_srt[:-valid_rows * 2]  # 80%
+# valid size == test size, last two sections of the data
+valid = df_srt[-valid_rows * 2:-valid_rows]  # 10%
+test = df_srt[-valid_rows:]  # 10%
+
 # Model building. Following function is used to train a model and to compute the accuracy score
 def train_model(classifier, train_vector, train_labels, valid_vector, valid_labels, is_neural_net=False):
     # fit the training dataset on the classifier
