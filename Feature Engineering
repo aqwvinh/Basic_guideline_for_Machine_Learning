@@ -1,6 +1,12 @@
 ### ENCODING
 FIT ONLY ON TRAIN SET cuz overfitting otherwise. Hint: fit_transform --> train. So fit on train and then transform on train,val and test
 
+# Get list of categorical variables
+s = (X_train.dtypes == 'object')
+object_cols = list(s[s].index)
+or
+object_cols = [col for col in X_train.columns if X_train[col].dtype == "object"]
+
 ## Convert categorical variables into integers using LabelEncoder (for when there are several different names). It can already be integers but need to encode them into labels for new features
 // Essential to encode categorical vars into numerical for the algorithms. Missing values treatment before
 from sklearn.preprocessing import LabelEncoder
@@ -11,6 +17,29 @@ for feature in cat_features: # Goal is to create new features in the same datafr
     df[feature+'_labels'] = encoded
  
 // Then you have to one-hot encode if the features are multi-class but no if too many classes --> use LightGBM model then. 
+
+# One-hot encoding
+Strategy: Only one-hot encode columns with relatively low cardinality (few unique values). Then, high cardinality columns can be label encoded.
+# Get cardinality (number of unique entries in each column with categorical data) to check if we can do one-hot encoding
+object_nunique = list(map(lambda col: X_train[col].nunique(), object_cols))
+d = dict(zip(object_cols, object_nunique))
+sorted(d.items(), key=lambda x: x[1]) # Print number of unique entries by column, in ascending order
+
+# Columns that will be one-hot encoded (cardinality < 10)
+low_cardinality_cols = [col for col in object_cols if X_train[col].nunique() < 10]
+# Columns that will be label encoded
+high_cardinality_cols = list(set(object_cols)-set(low_cardinality_cols))
+
+from sklearn.preprocessing import OneHotEncoder
+OH_encoder = OneHotEncoder(handle_unknown='ignore', sparse=False)  # ignore to avoid errors when the validation data contains classes that aren't represented in the training data and sparse = False to have a np.array and not a matrix
+OH_cols_train = pd.DataFrame(OH_encoder.fit_transform(X_train[object_cols/low_cardinality_cols]))  # Apply one-hot encoder to each column with categorical data
+OH_cols_valid = pd.DataFrame(OH_encoder.transform(X_valid[object_cols/low_cardinality_cols]))   # object_cols is the list of categorical vars
+OH_cols_train.index = X_train.index  # One-hot encoding removed index; put it back
+OH_cols_valid.index = X_valid.index
+num_X_train = X_train.drop(object_cols, axis=1) # Remove categorical columns (will replace with one-hot encoding)
+num_X_valid = X_valid.drop(object_cols, axis=1)
+OH_X_train = pd.concat([num_X_train, OH_cols_train], axis=1) # Add one-hot encoded columns to numerical features  
+OH_X_valid = pd.concat([num_X_valid, OH_cols_valid], axis=1)
 
 ## Statistics encoder so fit only on train set
 # Count encoder: replaces each categorical value with the number of times it appears in the dataset. The common/important values get their own grouping
@@ -98,3 +127,9 @@ def select_features_l1(X, y):
                                  columns=X.columns)
     selected_columns = selected_features.columns[selected_features.var() != 0]
     return selected_columns
+    
+Warning!!
+Fitting a label encoder to a column in the training data creates a corresponding integer-valued label for each unique value that appears in the training data. 
+In the case that the validation data contains values that don't also appear in the training data, the encoder will throw an error, because these values won't have an integer assigned to them. 
+Notice that the 'Condition2' column in the validation data contains the values 'RRAn' and 'RRNn', but these don't appear in the training data -- thus, if we try to use a label encoder with scikit-learn, the code will throw an error.
+--> Solution: Create a custom label encoder to deal with new categories. 
