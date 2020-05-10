@@ -45,3 +45,11 @@ my_model.fit(X_train, y_train,
              early_stopping_rounds=5, 
              eval_set=[(X_valid, y_valid)], 
              verbose=False)
+ 
+
+# Get predictions
+from sklearn.metrics import mean_absolute_error
+pred = my_model.predict(X_valid) 
+# Calculate MAE
+mae = mean_absolute_error(y_valid, pred)
+print("Mean Absolute Error:" , mae)
