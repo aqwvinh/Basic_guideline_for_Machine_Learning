@@ -1,0 +1,47 @@
+Ensemble methods combine the predictions of several models 
+Ex: RandomForestRegressor, gradient boosting
+
+### GRADIENT BOOSTING (XGBoost library)
+Gradient boosting is a method that goes through cycles to iteratively add models into an ensemble.
+It begins by initializing the ensemble with a single model, whose predictions can be pretty naive. (Even if its predictions are wildly inaccurate, subsequent additions to the ensemble will address those errors.)
+XGBoost stands for extreme gradient boosting, which is an implementation of gradient boosting with several additional features focused on performance and speed. (Scikit-learn has another version of gradient boosting, but XGBoost has some technical advantages.)
+
+from xgboost import XGBRegressor
+model = XGBRegressor()
+model.fit(X_train, y_train)
+
+## Parameters tuning
+1) n_estimators (usually between 100 and 1000)
+It specifies how many times to go through the modeling cycle described above. 
+It is equal to the number of models that we include in the ensemble.
+model = XGBRegressor(n_estimators = 500)
+
+2) early_stopping_rounds (usually 3 or 5 = patience)
+It offers a way to automatically find the ideal value for n_estimators.
+Better to start with a high value of n_estimators then reduce it with early_stopping_rounds
+When using early_stopping_rounds, you also need to set aside some data for calculating the validation scores - this is done by setting the eval_set parameter.
+
+my_model = XGBRegressor(n_estimators=500)
+my_model.fit(X_train, y_train, 
+             early_stopping_rounds=5, 
+             eval_set=[(X_valid, y_valid)],
+             verbose=False)
+           
+3) learning_rate (usually small, 0.1 max)
+This means each tree we add to the ensemble helps us less. So, we can set a higher value for n_estimators without overfitting.
+In general, a small learning rate and large number of estimators will yield more accurate XGBoost models
+
+my_model = XGBRegressor(n_estimators=1000, learning_rate=0.05)
+my_model.fit(X_train, y_train, 
+             early_stopping_rounds=5, 
+             eval_set=[(X_valid, y_valid)], 
+             verbose=False)
+             
+4) n_jobs 
+For large datasets, it equals to the number of cores on your machine.
+
+my_model = XGBRegressor(n_estimators=1000, learning_rate=0.05, n_jobs=4)
+my_model.fit(X_train, y_train, 
+             early_stopping_rounds=5, 
+             eval_set=[(X_valid, y_valid)], 
+             verbose=False)
