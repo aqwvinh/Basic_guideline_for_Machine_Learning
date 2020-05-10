@@ -1,0 +1,12 @@
+Data Leakage when good performance on training or validation but bad on real production.
+There are two main types of leakage: target leakage and train-test contamination.
+
+1) Target leakage
+When your predictors include data that will not be available at the time you make predictions.
+It is important to think about target leakage in terms of the timing or chronological order
+--> We have to check the chronological order for a feature that explains well the target. Ex: having a disease (y) and take medication
+Solution: not use the features that are available after the prediction time --> drop
+
+2) Train-test contamination
+When training data using validation set. That's why we need to SPLIT THE DATA BEFORE PREPROCESSING.
+Learn preprocessing on train (fit) and apply on the validation and test sets (transform)
