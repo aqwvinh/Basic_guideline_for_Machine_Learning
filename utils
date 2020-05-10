@@ -70,9 +70,17 @@ train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascend
 
 
 
-# MISSING VALUES
-# Count the number of NaN per column
+### MISSING VALUES
+# Number of missing values in each column of training data
+missing_val_count_by_column = (X_train.isnull().sum())
+print(missing_val_count_by_column[missing_val_count_by_column > 0])  # Print only the columns with missing values
+
+# Count the number of NaN per column. If we don't have so much features
 len(train) - train.count()
+
+# Get names of columns with missing values
+cols_with_missing = [col for col in train.columns
+                     if train[col].isnull().any()]
 
 # Complete missing values by the median / "Unknown"
 train['Age']=train['Age'].fillna(train['Age'].median() / "Unknown")
@@ -204,6 +212,11 @@ y_pred = best_model.predict(X_test)
 
 # Output creation
 test["Prediction"] = y_pred
+
+# Save predictions in format used for competition scoring
+output = pd.DataFrame({'Id': X_test.index,
+                       'Target': y_pred})
+output.to_csv('submission.csv', index=False)
 
 # Submission
 test.to_csv('/Users/vinhnguyen/Desktop/Kaggle/Titanic/submission.csv', index=False)
