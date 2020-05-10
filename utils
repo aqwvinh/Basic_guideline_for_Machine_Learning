@@ -45,6 +45,7 @@ Spend time to study the data:
 - convert strings into floats. Ex: sex, 
 - drop, convert and create new features
 - observations then decisions
+- use pipelines to avoid data leakage (too much preprocessing before split data)
 
 # Plot train labels
 import matplotlib.pyplot as plt
