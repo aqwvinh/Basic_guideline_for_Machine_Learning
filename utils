@@ -69,7 +69,8 @@ g.map(plt.hist, 'X', bins=20) # Call plotting function .map with interval of 20 
 # Correlation between Gender and Target using the mean
 train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascending = False)
 
-
+# Count the occurence for each value for categorical feature
+train.col1.value_counts()
 
 ### MISSING VALUES
 # Number of missing values in each column of training data
