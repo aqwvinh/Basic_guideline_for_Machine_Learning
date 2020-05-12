@@ -1,5 +1,7 @@
 ### ENCODING
 FIT ONLY ON TRAIN SET cuz overfitting otherwise. Hint: fit_transform --> train. So fit on train and then transform on train,val and test
+ENCODING WHEN THERE IS AN ORDER, category. Not number of
+
 
 # Get list of categorical variables
 s = (X_train.dtypes == 'object')
