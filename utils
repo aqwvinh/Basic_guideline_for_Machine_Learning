@@ -37,6 +37,28 @@ train = pd.read_csv("/Users/vinhnguyen/Desktop/Kaggle/Titanic/train.csv")
 
 train.describe() // train.describe(include = ['O']) if we want only the strings information. include = 'all' is possible
 
+#check the numbers of samples and features
+train.shape, test.shape
+
+#Save the 'Id' column
+train_ID = train['Id']
+test_ID = test['Id']
+#Now drop the  'Id' colum since it's unnecessary for  the prediction process.
+train.drop("Id", axis = 1, inplace = True)
+test.drop("Id", axis = 1, inplace = True)
+
+
+### Data preprocessing
+Select the most important features to check the outliers
+# Outliers
+fig, ax = plt.subplots()
+feature = "TotalBsmtSF"
+ax.scatter(x = train[feature], y = train['SalePrice'])
+plt.ylabel('SalePrice', fontsize=13)
+plt.xlabel(feature, fontsize=13)
+plt.show()
+
+
 Spend time to study the data:
 - % of train data
 - label distribution
@@ -47,17 +69,23 @@ Spend time to study the data:
 - observations then decisions
 - use pipelines to avoid data leakage (too much preprocessing before split data)
 
-# Plot train labels
+# Plot train Target
 import matplotlib.pyplot as plt
 import seaborn as sns
-sns.countplot(df_train.label)
-plt.xlabel('Label')
-plt.title('Label distribution')
+sns.countplot(df_train.target)
+plt.xlabel('Target')
+plt.title('Target distribution')
 
 # Merge 2 dataframes using the same column
 new_train = pd.merge(train, text1, on='id', how='inner')
 
-# To do data pre-processing on both train and test sets
+#Heat map to see how features are correlated with the target
+corrmat = train.corr()
+plt.subplots(figsize=(12,9))
+sns.heatmap(corrmat, vmax=0.9, square=True)
+
+
+# To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
 combine = [train,test]
 for dataset in combine:
     dataset["Sex"]=dataset["Sex"].map( {"female":1, "male":0}).astype(int)
