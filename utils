@@ -1,3 +1,14 @@
+Spend time to study the data. Here are some advice:
+- check the % that train data represent
+- plot label distribution
+- check features correlation
+- check missing values
+- convert strings into floats. Ex: gender, class etc 
+- drop, convert and create new features --> feature engineering
+- think as "observations then decisions"
+- use pipelines to avoid data leakage (too much preprocessing before split data)
+
+STEPS TO FOLLOW FOR CLASSICAL TASKS
 ### Import libraries
 # data analysis and wrangling
 import pandas as pd
@@ -19,19 +30,21 @@ from sklearn.linear_model import Perceptron
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
 
-# Import dataset from Kaggle
+### Import dataset 
+# from Kaggle
 import os
 os.environ['KAGGLE_USERNAME'] = "vinhnguyen94" # username from the json file
-os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the json file
+os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the json file. Do it each time
 !kaggle competitions download -c hecmontrealdeeplearningcourse # api copied from kaggle
+train = pd.read_csv("train.csv")
 
-# Import dataset on Colab
+# on Colab
 from google.colab import files
 uploaded = files.upload()
 import io
 train=pd.read_csv(io.BytesIO(uploaded['train.csv']))
 
-# Datasets into Dataframe
+# on Jupyter
 On Mac: open new window terminal, slide the data and copy the path
 train = pd.read_csv("/Users/vinhnguyen/Desktop/Kaggle/Titanic/train.csv")
 
@@ -43,31 +56,16 @@ train.shape, test.shape
 #Save the 'Id' column
 train_ID = train['Id']
 test_ID = test['Id']
-#Now drop the  'Id' colum since it's unnecessary for  the prediction process.
+#Now drop the  'Id' colum since it's unnecessary for the prediction process.
 train.drop("Id", axis = 1, inplace = True)
 test.drop("Id", axis = 1, inplace = True)
 
-
-### Data preprocessing
+### Understand the data
 Select the most important features to check the outliers
-# Outliers
-fig, ax = plt.subplots()
-feature = "TotalBsmtSF"
-ax.scatter(x = train[feature], y = train['SalePrice'])
-plt.ylabel('SalePrice', fontsize=13)
-plt.xlabel(feature, fontsize=13)
-plt.show()
-
-
-Spend time to study the data:
-- % of train data
-- label distribution
-- features correlation
-- missing values
-- convert strings into floats. Ex: sex, 
-- drop, convert and create new features
-- observations then decisions
-- use pipelines to avoid data leakage (too much preprocessing before split data)
+# Heatmap to see how features are correlated
+corrmat = train.corr()
+plt.subplots(figsize=(12,9))
+sns.heatmap(corrmat, vmax=0.9, square=True)
 
 # Plot train Target
 import matplotlib.pyplot as plt
@@ -76,58 +74,87 @@ sns.countplot(df_train.target)
 plt.xlabel('Target')
 plt.title('Target distribution')
 
-# Merge 2 dataframes using the same column
-new_train = pd.merge(train, text1, on='id', how='inner')
+# Spot outliers. Strategy: delete very bad outliers. not all outliers to have a model robust on outliers
+fig, ax = plt.subplots()
+feature = "TotalBsmtSF"
+ax.scatter(x = train[feature], y = train['SalePrice'])
+plt.ylabel('SalePrice', fontsize=13)
+plt.xlabel(feature, fontsize=13)
+plt.show()
+# Drop chosen outliers
+train = train.drop(train[(train['TotalBsmtSF']>4000) & (train['SalePrice']<300000)].index)  # Example for the house pricing
 
-#Heat map to see how features are correlated with the target
-corrmat = train.corr()
-plt.subplots(figsize=(12,9))
-sns.heatmap(corrmat, vmax=0.9, square=True)
-
-
-# To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
-combine = [train,test]
-for dataset in combine:
-    dataset["Sex"]=dataset["Sex"].map( {"female":1, "male":0}).astype(int)
-
-# Multiple plots
+# Multiple plots TO DO
 g = sns.FacetGrid(train, col='y') # Initialize the FacetGrid with the data (train) and the target var
 g.map(plt.hist, 'X', bins=20) # Call plotting function .map with interval of 20 (for age for ex)
 
 # Correlation between Gender and Target using the mean
 train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascending = False)
 
+# Merge 2 dataframes using the same column
+new_train = pd.merge(train, text1, on='id', how='inner')
+
+### DATA PREPROCESSING
+To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
+
+# Concatenate train and test data to do the preprocessing once. Not the best strategy but faster
+ntrain = train.shape[0] # Essential to re-split the data before modeling. shape[0] to have only the nb of rows
+ntest = test.shape[0]
+y_train = train.target.values
+all_data = pd.concat((train, test)).reset_index(drop=True)
+all_data.drop(['target'], axis=1, inplace=True)
+print("all_data size is : {}".format(all_data.shape))
+
 # Count the occurence for each value for categorical feature
 train.col1.value_counts()
 
+# Convert string categorical vars into numerical manually
+dataset["Sex"]=dataset["Sex"].map( {"female":1, "male":0}).astype(int)
+
+
 ### MISSING VALUES
-# Number of missing values in each column of training data
-missing_val_count_by_column = (X_train.isnull().sum())
+# Print only the columns with missing values
+missing_val_count_by_column = (df.isnull().sum())
 print(missing_val_count_by_column[missing_val_count_by_column > 0])  # Print only the columns with missing values
 
-# Count the number of NaN per column. If we don't have so much features
+# (Variante) Count the number of NaN per column. If we don't have so much features
 len(train) - train.count()
 
 # Get names of columns with missing values
 cols_with_missing = [col for col in train.columns
                      if train[col].isnull().any()]
 
-# Complete missing values by the median / "Unknown"
+# Get columns for categorical features (replace by the most frequent occurence) and numerical features (replace by the mean)
+categorical_cols = [cname for cname in all_data.columns if
+                    all_data[cname].nunique() < 10 and    #to limit the size of the encoding
+                    all_data[cname].dtype == "object" and
+                    all_data[cname].isnull().sum() > 0
+                    ]
+numerical_cols = [cname for cname in all_data.columns if 
+                all_data[cname].dtype in ['int64', 'float64'] and 
+                all_data[cname].isnull().sum() > 0
+                ]
+# Replace by the mean and the most frequent values
+for feature in categorical_cols:
+  all_data[feature] = all_data[feature].fillna(all_data[feature].dropna().mode()[0])
+
+for feature in numerical_cols:
+  all_data[feature] = all_data[feature].fillna(all_data[feature].mean())
+  
+# (Variante) Complete missing values by the median / "Unknown"
 train['Age']=train['Age'].fillna(train['Age'].median() / "Unknown")
 
-# Complete missing values by the most frequent occurence (letter or numerical category). Ex: frequent port of embarkation
+# (Variante) Complete missing values by the most frequent occurence (letter or numerical category). Ex: frequent port of embarkation
 freq_port = train.Embarked.dropna().mode()[0]
 train["Embarked"] = train["Embarked"].fillna(freq_port)
 
-# Complete missing values by using other correlated features instead of replacing by the mean of the missing variable
+# (Variante) Complete missing values by using other correlated features instead of replacing by the mean of the missing variable
 # Guess Age values using median values for Age across sets of Pclass and Gender feature combinations
 guess_ages = np.zeros((2,3))  # (2,3) cuz Sex is 2 and Pclass is 3
-
-for dataset in combine:
     for i in range(0, 2):
         for j in range(0, 3):
-            guess_df = dataset[(dataset['Sex'] == i) & \
-                                  (dataset['Pclass'] == j+1)]['Age'].dropna()
+            guess_df = df[(df['Sex'] == i) & \
+                                  (df['Pclass'] == j+1)]['Age'].dropna()
 
             # age_mean = guess_df.mean()
             # age_std = guess_df.std()
@@ -140,49 +167,71 @@ for dataset in combine:
             
     for i in range(0, 2):
         for j in range(0, 3):
-            dataset.loc[ (dataset.Age.isnull()) & (dataset.Sex == i) & (dataset.Pclass == j+1),\
+            df.loc[ (df.Age.isnull()) & (df.Sex == i) & (df.Pclass == j+1),\
                     'Age'] = guess_ages[i,j]
 
-    dataset['Age'] = dataset['Age'].astype(int)
+    df['Age'] = df['Age'].astype(int)
 
 
-
+### Categorizing
 # Create ranges of age for plotting
 train['Age_bins']=pd.cut(x=train['Age'], bins=[0,19, 39, 59,79], labels=['0-10s','20-30s','40-50s','60-70s']) # number of labels should be one less than bins
-or
-train['AgeBand'] = pd.cut(train['Age'], 5) # Create 5 categories of Age. better. We can add labels if we want. Use qcut if to have balanced categories
+or (BETTER)
+train['AgeBand'] = pd.cut(train['Age'], 5) # Create 5 categories of Age. We can add labels if we want. Use qcut if to have balanced categories
 
+# Group the AgeBand depending on the target variable
 train.groupby(["Age_bins"]).mean()
 or
-train[['AgeBand', 'Survived']].groupby(['AgeBand'], as_index=False).mean().sort_values(by='AgeBand', ascending=True) #Wanna know which AgeBand is, on average, more likely to survive
+train[['AgeBand', 'Survived']].groupby(['AgeBand'], as_index=False).mean().sort_values(by='AgeBand', ascending=True)
 
 pd.crosstab(train.Age_bins, train.Survived).plot(kind="bar") #Survived = target
 
-# To convert strings into numerical values (for Sex for instance)
-for dataset in combine:
-    dataset['Sex'] = dataset['Sex'].map( {'female': 1, 'male': 0} ).astype(int)
+# Convert age into fixed categories of Age after the pd.cut   
+dataset.loc[ dataset['Age'] <= 16, 'Age'] = 0
+dataset.loc[(dataset['Age'] > 16) & (dataset['Age'] <= 32), 'Age'] = 1
+dataset.loc[(dataset['Age'] > 32) & (dataset['Age'] <= 48), 'Age'] = 2
+dataset.loc[(dataset['Age'] > 48) & (dataset['Age'] <= 64), 'Age'] = 3
+dataset.loc[ dataset['Age'] > 64, 'Age'] = 4
 
 
-# Convert age into fixed categories of Age
-for dataset in combine:    
-    dataset.loc[ dataset['Age'] <= 16, 'Age'] = 0
-    dataset.loc[(dataset['Age'] > 16) & (dataset['Age'] <= 32), 'Age'] = 1
-    dataset.loc[(dataset['Age'] > 32) & (dataset['Age'] <= 48), 'Age'] = 2
-    dataset.loc[(dataset['Age'] > 48) & (dataset['Age'] <= 64), 'Age'] = 3
-    dataset.loc[ dataset['Age'] > 64, 'Age'] = 4
-
-# Create another feature called IsAlone. Reminder: combine = [train, test]
+### Creation of new feature. Some ideas
+# TITANIC. Create another feature called IsAlone. Reminder: combine = [train, test]
 for dataset in combine:
     dataset["IsAlone"]=0 #Creation of the new feature
     dataset.loc[dataset["FamilySize"] == 1, "IsAlone"] = 1 # 1 if the person is alone
+    
+# HOUSE PRICING. Create a variable for the total size of the house. Try to group correlated variables
+all_data["tot_surface"] = all_data["TotalBsmtSF"] + all_data["1stFlrSF"] + all_data["2ndFlrSF"]
 
+### Encoding
+from sklearn.preprocessing import LabelEncoder
+# Select all cat feature to encode: variables with categories and a hierarchy 
+cat_features = ['MSSubClass', 'MSZoning', 'Street',
+       'LotShape', 'LandContour', 'Utilities', 'LotConfig', 'LandSlope',
+       'Neighborhood', 'Condition1', 'Condition2', 'BldgType', 'HouseStyle',
+       'OverallQual', 'OverallCond', 'RoofStyle',
+       'RoofMatl', 'MasVnrType',
+       'ExterQual', 'ExterCond', 'Foundation', 'BsmtQual', 'BsmtCond',
+       'BsmtExposure', 'BsmtFinType1', 'BsmtFinType2',
+       'Heating', 'HeatingQC',
+       'CentralAir', 'Electrical',
+       'KitchenQual',
+       'Functional', 'Fireplaces', 'GarageType', 'GarageFinish',
+      'GarageQual', 'GarageCond', 'PavedDrive',
+       'SaleType',
+       'SaleCondition']
 
-
-# Remove columns from the df
-train = train.drop(["col1", "col2"], axis=1)
+for feature in cat_features:
+  enc = LabelEncoder()
+  all_data[feature] = enc.fit_transform(all_data[feature])   # Not the best way but i've to find better one. Not good to fit the encoder on test
 
 
 ### Modeling
+# Split train and test sets
+train = all_data[:ntrain]
+test = all_data[ntrain:]
+
+# Verify that X = X_train and y = y_train
 X = train.drop("label", axis = 1)
 y = train.label
 
