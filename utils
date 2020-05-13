@@ -115,13 +115,6 @@ all_data = pd.concat((train, test)).reset_index(drop=True)
 all_data.drop(['target'], axis=1, inplace=True)
 print("all_data size is : {}".format(all_data.shape))
 
-# Count the occurence for each value for categorical feature
-train.col1.value_counts()
-
-# Convert string categorical vars into numerical ordered manually. Important to do that manually cuz order matters (Ordinal encoding)
-all_data['GarageQual'].unique()
-all_data["GarageQual"]=all_data["GaraQual"].map({'Fa':1, 'TA':2, 'Gd':3, 'Ex':4}).astype(int)
-
 
 ### MISSING VALUES
 # Print only the columns with missing values and there corresponding %
@@ -188,6 +181,22 @@ guess_ages = np.zeros((2,3))  # (2,3) cuz Sex is 2 and Pclass is 3
                     'Age'] = guess_ages[i,j]
 
     df['Age'] = df['Age'].astype(int)
+    
+# Converting numeric features to categorical features
+from sklearn.preprocessing import LabelEncoder
+str_cols = ['YrSold','YearRemodAdd','YearBuilt','MoSold','MSSubClass']
+for col in str_cols:
+    all_data[col] = all_data[col].astype(str)
+    label = LabelEncoder()
+    arr = label.fit_transform(all_data[col])
+    all_data[col] = arr
+
+# Count the occurence for each value for categorical feature
+train.col1.value_counts()
+
+# Convert string categorical vars into numerical ordered manually. Important to do that manually cuz order matters (Ordinal encoding)
+all_data['GarageQual'].unique()
+all_data["GarageQual"]=all_data["GaraQual"].map({'Fa':1, 'TA':2, 'Gd':3, 'Ex':4}).astype(int)
 
 
 ### Categorizing
