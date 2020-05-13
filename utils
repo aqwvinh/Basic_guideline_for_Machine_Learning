@@ -50,6 +50,8 @@ train = pd.read_csv("/Users/vinhnguyen/Desktop/Kaggle/Titanic/train.csv")
 
 train.describe() // train.describe(include = ['O']) if we want only the strings information. include = 'all' is possible
 
+# Check if the target variable is normal, sometimes there can be very bad mistake that would ruin the model (like a negative price)
+
 #check the numbers of samples and features
 train.shape, test.shape
 
@@ -61,11 +63,19 @@ train.drop("Id", axis = 1, inplace = True)
 test.drop("Id", axis = 1, inplace = True)
 
 ### Understand the data
-Select the most important features to check the outliers
+Select the most important features to check the outliers and to check multicorrelation (reduce nb of features)
 # Heatmap to see how features are correlated
 corrmat = train.corr()
 plt.subplots(figsize=(12,9))
 sns.heatmap(corrmat, vmax=0.9, square=True)
+
+# Heatmap to check the features that contribute the most to the target variable
+k = 10 #number of variables for heatmap
+cols = corrmat.nlargest(k, 'Target')['Target'].index
+cm = np.corrcoef(train[cols].values.T)
+sns.set(font_scale=1.25)
+hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
+plt.show()
 
 # Plot train Target
 import matplotlib.pyplot as plt
@@ -108,12 +118,19 @@ print("all_data size is : {}".format(all_data.shape))
 # Count the occurence for each value for categorical feature
 train.col1.value_counts()
 
-# Convert string categorical vars into numerical manually
-dataset["Sex"]=dataset["Sex"].map( {"female":1, "male":0}).astype(int)
+# Convert string categorical vars into numerical ordered manually. Important to do that manually cuz order matters (Ordinal encoding)
+all_data['GarageQual'].unique()
+all_data["GarageQual"]=all_data["GaraQual"].map({'Fa':1, 'TA':2, 'Gd':3, 'Ex':4}).astype(int)
 
 
 ### MISSING VALUES
-# Print only the columns with missing values
+# Print only the columns with missing values and there corresponding %
+total_miss = all_data.isnull().sum().sort_values(ascending=False)
+percent_miss = (all_data.isnull().sum()/all_data.isnull().count()).sort_values(ascending=False)
+missing_data = pd.concat([total_miss, percent_miss], axis=1, keys=['Total_miss', 'Percent_miss'])
+// Strategy: When lots of features, we can delete the features with high % of missing values (let's say 15%). Check if these variables are important
+
+# (Variante) Print only the columns with missing values
 missing_val_count_by_column = (df.isnull().sum())
 print(missing_val_count_by_column[missing_val_count_by_column > 0])  # Print only the columns with missing values
 
@@ -203,6 +220,16 @@ for dataset in combine:
 # HOUSE PRICING. Create a variable for the total size of the house. Try to group correlated variables
 all_data["tot_surface"] = all_data["TotalBsmtSF"] + all_data["1stFlrSF"] + all_data["2ndFlrSF"]
 
+### TO GO FURTHER: CHECK NORMALITY. The variables should be normal
+from scipy import stats
+#histogram and normal probability plot
+sns.distplot(y_train);
+fig = plt.figure()
+res = stats.probplot(y_train, plot=plt) #The variable has to follow the red line (that represents the normal distribution).
+# In case of hyperbol (positive skewness), apply log
+y_train = np.10log(y_train)   #Recheck now. Be careful on the submission, we need to inverse
+and don't forget: y_pred = 10**y_pred
+
 ### Encoding
 from sklearn.preprocessing import LabelEncoder
 # Select all cat feature to encode: variables with categories and a hierarchy 
@@ -225,6 +252,9 @@ for feature in cat_features:
   enc = LabelEncoder()
   all_data[feature] = enc.fit_transform(all_data[feature])   # Not the best way but i've to find better one. Not good to fit the encoder on test
 
+# One-hot encoding using pandas
+all_data = pd.get_dummies(all_data)
+
 
 ### Modeling
 # Split train and test sets
@@ -234,6 +264,7 @@ test = all_data[ntrain:]
 # Verify that X = X_train and y = y_train
 X = train.drop("label", axis = 1)
 y = train.label
+// check if the target variable is normalized: y_train = np.log(y_train)
 
 # split the dataset into training and validation datasets
 from sklearn import model_selection
@@ -256,8 +287,40 @@ def get_data_splits(df, valid_fraction=0.1):
 // to call the function: 
 train, valid, test = get_data_splits(df)
 
+# Using Robust Scaler to transform X_train. Aim: scale features to be robust to outliers
+from sklearn.preprocessing import RobustScaler
+robust_scaler = RobustScaler()
 
-# Model building. Following function is used to train a model and to compute the accuracy score
+X_train_scaled = robust_scaler.fit_transform(X_train)
+X_test_scaled = robust_scaler.transform(test)
+
+# Importing the models
+from sklearn.linear_model import LinearRegression, BayesianRidge, ElasticNet, Lasso, SGDRegressor, Ridge
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.svm import LinearSVR, SVR
+
+# Creating the models
+models = [LinearRegression(), SVR(), SGDRegressor(), SGDRegressor(max_iter=1000, tol=1e-3), GradientBoostingRegressor(), RandomForestRegressor(),
+             Lasso(), Lasso(alpha=0.01, max_iter=10000), Ridge(), BayesianRidge(), KernelRidge(), KernelRidge(alpha=0.6, kernel='polynomial',degree=2, coef0=2.5),
+             ElasticNet(), ElasticNet(alpha=0.001, max_iter=10000), ExtraTreesRegressor()]
+names = ['Linear Regression','Support Vector Regression','Stochastic Gradient Descent','Stochastic Gradient Descent 2','Gradient Boosting Tree','Random Forest',
+         'Lasso Regression','Lasso Regression 2','Ridge Regression','Bayesian Ridge Regression','Kernel Ridge Regression','Kernel Ridge Regression 2',
+         'Elastic Net Regularization','Elastic Net Regularization 2','Extra Trees Regression']
+
+# Define a root mean square error function
+from sklearn.model_selection import KFold, cross_val_score
+def rmse(model, X, y):
+    rmse = np.sqrt(-cross_val_score(model, X, y, scoring="neg_mean_squared_error", cv=5))
+    return rmse
+
+# Perform 5-folds cross-validation to evaluate the models 
+for model, name in zip(models, names):
+    # Root mean square error
+    score = rmse(model, X_train_scaled, y_train)
+    print(f"- {name}: Mean: {round(score.mean(),2)}, Std: {round(score.std(),2)}")
+
+# (Variante) Model building. Following function is used to train a model and to compute the accuracy score
 def train_model(classifier, train_vector, train_labels, valid_vector, valid_labels, is_neural_net=False):
     # fit the training dataset on the classifier
     classifier.fit(train_vector, train_labels)
@@ -288,6 +351,8 @@ clf.best_params_ #to show best params found
 
 # Predict on test
 y_pred = best_model.predict(X_test)
+or
+y_pred = np.exp(best_model.predict(X_test_scaled))  # If we've applied log to normalize the variables
 
 # Output creation
 test["Prediction"] = y_pred
