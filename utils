@@ -182,23 +182,7 @@ guess_ages = np.zeros((2,3))  # (2,3) cuz Sex is 2 and Pclass is 3
 
     df['Age'] = df['Age'].astype(int)
     
-# Converting numeric features to categorical features
-from sklearn.preprocessing import LabelEncoder
-str_cols = ['YrSold','YearRemodAdd','YearBuilt','MoSold','MSSubClass']
-for col in str_cols:
-    all_data[col] = all_data[col].astype(str)
-    label = LabelEncoder()
-    arr = label.fit_transform(all_data[col])
-    all_data[col] = arr
-
-# Count the occurence for each value for categorical feature
-train.col1.value_counts()
-
-# Convert string categorical vars into numerical ordered manually. Important to do that manually cuz order matters (Ordinal encoding)
-all_data['GarageQual'].unique()
-all_data["GarageQual"]=all_data["GaraQual"].map({'Fa':1, 'TA':2, 'Gd':3, 'Ex':4}).astype(int)
-
-
+    
 ### Categorizing
 # Create ranges of age for plotting
 train['Age_bins']=pd.cut(x=train['Age'], bins=[0,19, 39, 59,79], labels=['0-10s','20-30s','40-50s','60-70s']) # number of labels should be one less than bins
@@ -240,6 +224,36 @@ y_train = np.10log(y_train)   #Recheck now. Be careful on the submission, we nee
 and don't forget: y_pred = 10**y_pred
 
 ### Encoding
+BEST PRACTICE : MANUALLY ENCODE WHEN ORDER MATTERS AND ONE-HOT ENCODE WHEN NO HIERARCHY
+
+# Converting numeric features to categorical features. Especially for the year or month --> need to create categories
+from sklearn.preprocessing import LabelEncoder
+str_cols = ['YrSold','YearRemodAdd','YearBuilt','MoSold','MSSubClass']
+for col in str_cols:
+    all_data[col] = all_data[col].astype(str)
+    label = LabelEncoder()
+    arr = label.fit_transform(all_data[col])
+    all_data[col] = arr
+
+# Count the occurence for each value for categorical feature
+train.col1.value_counts()
+
+# Convert string categorical vars into numerical ordered manually. Important to do that manually cuz order matters (Ordinal encoding)
+all_data['GarageQual'].unique()
+all_data["GarageQual"]=all_data["GaraQual"].map({'Fa':1, 'TA':2, 'Gd':3, 'Ex':4}).astype(int)
+# One-hot encoding for categorical features using pd.dummies
+cat_df = all_data.select_dtypes(include=[np.object])  #Take all the categorical features (strings)
+for col in cat_df.columns:
+    cat_df = pd.concat([cat_df, pd.get_dummies(cat_df[col], drop_first=True)], axis=1)
+    cat_df.drop(col, axis=1, inplace=True)
+data_encoded = pd.concat([all_data.select_dtypes(include=[np.number]),     # Concat with the numerical features
+    cat_df.drop(cat_df.select_dtypes(include=[np.object]), axis=1)], axis=1)   # Don't keep the original categorical features
+data_encoded.head(2)
+
+# One-hot encoding using pandas (easier)
+all_data = pd.get_dummies(all_data)
+
+# Encode with LabelEncoder. THE DIFFERENCE BETWEEN ONE-HOT AND LABEL ENCODING IS THAT ONE-HOT DOESNT HAVE HIERARCHY. 
 from sklearn.preprocessing import LabelEncoder
 # Select all cat feature to encode: variables with categories and a hierarchy 
 cat_features = ['MSSubClass', 'MSZoning', 'Street',
@@ -261,20 +275,26 @@ for feature in cat_features:
   enc = LabelEncoder()
   all_data[feature] = enc.fit_transform(all_data[feature])   # Not the best way but i've to find better one. Not good to fit the encoder on test
 
-# One-hot encoding using pandas
-all_data = pd.get_dummies(all_data)
 
 
 ### Modeling
+# Importing the models
+from sklearn.linear_model import LinearRegression, BayesianRidge, ElasticNet, Lasso, SGDRegressor, Ridge
+from sklearn.kernel_ridge import KernelRidge
+from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
+from sklearn.svm import LinearSVR, SVR
+
 # Split train and test sets
 train = all_data[:ntrain]
 test = all_data[ntrain:]
 
-# Verify that X = X_train and y = y_train
+# Summarize the X and y variables. Reminder: y_train can be normalized by the log function
 X = train.drop("label", axis = 1)
-y = train.label
-// check if the target variable is normalized: y_train = np.log(y_train)
+y = train.label   # check if the target variable is normalized: y_train = np.log(y_train)
+X_test = test
+X.shape, y.shape, X_test.shape  # To check if the shapes are correct
 
+When the dataset is big enough, no need to do cross-validation so we can split into train and valid
 # split the dataset into training and validation datasets
 from sklearn import model_selection
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
@@ -299,15 +319,8 @@ train, valid, test = get_data_splits(df)
 # Using Robust Scaler to transform X_train. Aim: scale features to be robust to outliers
 from sklearn.preprocessing import RobustScaler
 robust_scaler = RobustScaler()
-
-X_train_scaled = robust_scaler.fit_transform(X_train)
+X_train_scaled = robust_scaler.fit_transform(X)
 X_test_scaled = robust_scaler.transform(test)
-
-# Importing the models
-from sklearn.linear_model import LinearRegression, BayesianRidge, ElasticNet, Lasso, SGDRegressor, Ridge
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
-from sklearn.svm import LinearSVR, SVR
 
 # Creating the models
 models = [LinearRegression(), SVR(), SGDRegressor(), SGDRegressor(max_iter=1000, tol=1e-3), GradientBoostingRegressor(), RandomForestRegressor(),
@@ -326,8 +339,9 @@ def rmse(model, X, y):
 # Perform 5-folds cross-validation to evaluate the models 
 for model, name in zip(models, names):
     # Root mean square error
-    score = rmse(model, X_train_scaled, y_train)
+    score = rmse(model, X_train_scaled, y)
     print(f"- {name}: Mean: {round(score.mean(),2)}, Std: {round(score.std(),2)}")
+
 
 # (Variante) Model building. Following function is used to train a model and to compute the accuracy score
 def train_model(classifier, train_vector, train_labels, valid_vector, valid_labels, is_neural_net=False):
@@ -358,18 +372,20 @@ clf = model_selection.GridSearchCV(linear_model.LogisticRegression(max_iter=300)
 best_clf = clf.fit(X_train, y_train)
 clf.best_params_ #to show best params found
 
+### Final model
+best_model = ExtraTreesRegressor()  # For example with the best_params found earlier if applicable
+best_model.fit(X_train_scaled, y_train)
+
 # Predict on test
-y_pred = best_model.predict(X_test)
+y_pred = best_model.predict(X_test_scaled)
 or
 y_pred = np.exp(best_model.predict(X_test_scaled))  # If we've applied log to normalize the variables
-
-# Output creation
-test["Prediction"] = y_pred
 
 # Save predictions in format used for competition scoring
 output = pd.DataFrame({'Id': X_test.index,
                        'Target': y_pred})
 output.to_csv('submission.csv', index=False)
+print("Your submission was successfully saved!")
 
-# Submission
+# Submission on Jupyter if we wanna select the file
 test.to_csv('/Users/vinhnguyen/Desktop/Kaggle/Titanic/submission.csv', index=False)
