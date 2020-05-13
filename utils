@@ -322,7 +322,7 @@ robust_scaler = RobustScaler()
 X_train_scaled = robust_scaler.fit_transform(X)
 X_test_scaled = robust_scaler.transform(test)
 
-# Creating the models
+# Creating the models. ADAPT ACCORDING THE TASK. HERE IS HOUSE PRICING PREDICTION
 models = [LinearRegression(), SVR(), SGDRegressor(), SGDRegressor(max_iter=1000, tol=1e-3), GradientBoostingRegressor(), RandomForestRegressor(),
              Lasso(), Lasso(alpha=0.01, max_iter=10000), Ridge(), BayesianRidge(), KernelRidge(), KernelRidge(alpha=0.6, kernel='polynomial',degree=2, coef0=2.5),
              ElasticNet(), ElasticNet(alpha=0.001, max_iter=10000), ExtraTreesRegressor()]
