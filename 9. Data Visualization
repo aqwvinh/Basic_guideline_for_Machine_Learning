@@ -1,0 +1,46 @@
+import seaborn as sns
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+1. Lineplot
+# Set the width and height of the figure
+plt.figure(figsize=(14,6))
+# Add title
+plt.title("Daily Global Streams of Popular Songs in 2017-2018")
+# Line chart showing daily global streams of each song 
+sns.lineplot(data=spotify_data)
+
+2. Bar chart
+# Set the width and height of the figure
+plt.figure(figsize=(10,6))
+# Add title
+plt.title("Average Arrival Delay for Spirit Airlines Flights, by Month")
+# Bar chart showing average arrival delay for Spirit Airlines flights by month
+sns.barplot(x=flight_data.index, y=flight_data['target'])
+# Add label for vertical axis
+plt.ylabel("Arrival delay (in minutes)")
+
+3. Heat map
+sns.heatmap(data=flight_data, annot=True)
+
+4. Scatter plots
+sns.scatterplot(x=df['col_x'], y=df['col_y'])
+
+# Add a linear regression line that best fits the data
+sns.regplot(x=df['col_x'], y=df['col_y'])
+
+# Relation with a third binary variable (color the points)
+sns.scatterplot(x=insurance_data['bmi'], y=insurance_data['charges'], hue=insurance_data['smoker'])
+
+5. Histogram 
+sns.distplot(a=df['col'], kde=False)
+
+# Histograms for each species --> good to plot histogram for different label values but same feature
+sns.distplot(a=iris_set_data['Petal Length (cm)'], label="Iris-setosa", kde=False)
+sns.distplot(a=iris_ver_data['Petal Length (cm)'], label="Iris-versicolor", kde=False)
+sns.distplot(a=iris_vir_data['Petal Length (cm)'], label="Iris-virginica", kde=False)
+# Add title
+plt.title("Histogram of Petal Lengths, by Species")
+# Force legend to appear
+plt.legend()
+
