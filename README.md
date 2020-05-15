@@ -1,4 +1,4 @@
-# Basic guideline-for-Machine-Learning
+# Basic guideline for Machine Learning
 
 Hello World ! 
 
