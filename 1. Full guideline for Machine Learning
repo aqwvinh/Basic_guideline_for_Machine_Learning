@@ -125,6 +125,7 @@ total_miss = all_data.isnull().sum().sort_values(ascending=False)
 percent_miss = (all_data.isnull().sum()/all_data.isnull().count()).sort_values(ascending=False)
 missing_data = pd.concat([total_miss, percent_miss], axis=1, keys=['Total_miss', 'Percent_miss'])
 // Strategy: When lots of features, we can delete the features with high % of missing values (let's say 15%). Check if these variables are important
+// It's better to drop variables with high % of missing values instead of replacing by "Unknown" cuz it would create low variance which is uniformative for ML models.  
 
 # (Variante) Print only the columns with missing values
 missing_val_count_by_column = (df.isnull().sum())
@@ -147,7 +148,7 @@ numerical_cols = [cname for cname in all_data.columns if
                 all_data[cname].dtype in ['int64', 'float64'] and 
                 all_data[cname].isnull().sum() > 0
                 ]
-# Replace by the mean and the most frequent values
+# Replace by the mean (num) and the most frequent values (cat). For num, not always by the mean (median or 0)
 for feature in categorical_cols:
   all_data[feature] = all_data[feature].fillna(all_data[feature].dropna().mode()[0])
 
@@ -223,8 +224,10 @@ sns.distplot(y_train);
 fig = plt.figure()
 res = stats.probplot(y_train, plot=plt) #The variable has to follow the red line (that represents the normal distribution).
 # In case of hyperbol (positive skewness), apply log
-y_train = np.10log(y_train)   #Recheck now. Be careful on the submission, we need to inverse
-and don't forget: y_pred = 10**y_pred
+y_train = np.log(y_train)   #Recheck now. Be careful on the submission, we need to compute the exponential
+and don't forget: y_pred = np.exp(y_pred)
+// Skewness measures the lack of symmetry in data distribution. It has to be close to 0
+// Kurtosis is used to measure outliers present in the distribution. It has to be less than 3.
 
 ### Encoding
 BEST PRACTICE : MANUALLY ENCODE WHEN ORDER MATTERS AND ONE-HOT ENCODE WHEN NO HIERARCHY
