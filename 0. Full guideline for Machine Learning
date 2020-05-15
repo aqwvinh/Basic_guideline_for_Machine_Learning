@@ -1,4 +1,4 @@
-Spend time to study the data. Here are some advice:
+0) Spend time to study the data. Here are some advice:
 - check the % that train data represent
 - plot label distribution
 - check features correlation
@@ -8,8 +8,8 @@ Spend time to study the data. Here are some advice:
 - think as "observations then decisions"
 - use pipelines to avoid data leakage (too much preprocessing before split data)
 
-STEPS TO FOLLOW FOR CLASSICAL TASKS
-### Import libraries
+STEPS TO FOLLOW FOR CLASSICAL TASKS (Regression, Classification, Clustering)
+1)IMPORTATION
 # data analysis and wrangling
 import pandas as pd
 import numpy as np
@@ -21,14 +21,15 @@ import matplotlib.pyplot as plt
 %matplotlib inline
 
 # machine learning
-from sklearn.linear_model import LogisticRegression
-from sklearn.svm import SVC, LinearSVC
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression, LinearRegression, BayesianRidge, ElasticNet, Lasso, SGDRegressor, Ridge
+from sklearn.svm import SVC, LinearSVC, SVR
+from sklearn.ensemble import RandomForestClassifier, ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.naive_bayes import GaussianNB
 from sklearn.linear_model import Perceptron
 from sklearn.linear_model import SGDClassifier
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.kernel_ridge import KernelRidge
 
 ### Import dataset 
 # from Kaggle
@@ -62,7 +63,7 @@ test_ID = test['Id']
 train.drop("Id", axis = 1, inplace = True)
 test.drop("Id", axis = 1, inplace = True)
 
-### Understand the data
+2) Understand the data
 Select the most important features to check the outliers and to check multicorrelation (reduce nb of features)
 # Heatmap to see how features are correlated
 corrmat = train.corr()
@@ -101,11 +102,13 @@ g.map(plt.hist, 'X', bins=20) # Call plotting function .map with interval of 20 
 # Correlation between Gender and Target using the mean
 train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascending = False)
 
+
+
+3) DATA PREPROCESSING
+To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
+
 # Merge 2 dataframes using the same column
 new_train = pd.merge(train, text1, on='id', how='inner')
-
-### DATA PREPROCESSING
-To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
 
 # Concatenate train and test data to do the preprocessing once. Not the best strategy but faster
 ntrain = train.shape[0] # Essential to re-split the data before modeling. shape[0] to have only the nb of rows
@@ -277,12 +280,7 @@ for feature in cat_features:
 
 
 
-### Modeling
-# Importing the models
-from sklearn.linear_model import LinearRegression, BayesianRidge, ElasticNet, Lasso, SGDRegressor, Ridge
-from sklearn.kernel_ridge import KernelRidge
-from sklearn.ensemble import ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
-from sklearn.svm import LinearSVR, SVR
+4) Modeling
 
 # Split train and test sets
 train = all_data[:ntrain]
