@@ -1,0 +1,201 @@
+1. Simple ensemble models
+- Max Voting
+- Averaging
+- Weighted Averaging
+
+1.1 Max Voting --> Classification
+The max voting method is generally used for classification problems. In this technique, multiple models are used to make predictions for each data point. 
+The predictions by each model are considered as a ‘vote’. The predictions which we get from the majority of the models are used as the final prediction.
+Example: 
+model1 = tree.DecisionTreeClassifier()
+model2 = KNeighborsClassifier()
+model3= LogisticRegression()
+
+model1.fit(x_train,y_train)
+model2.fit(x_train,y_train)
+model3.fit(x_train,y_train)
+
+pred1=model1.predict(x_test)
+pred2=model2.predict(x_test)
+pred3=model3.predict(x_test)
+
+final_pred = np.array([])
+for i in range(0,len(x_test)):
+    final_pred = np.append(final_pred, mode([pred1[i], pred2[i], pred3[i]]))
+    
+1.2 Averaging --> Classification and Regression
+Example: Same code than 1.1 Max Voting but 
+finalpred=(pred1+pred2+pred3)/3
+
+1.3 Weighted --> Same than Averaging but we add weights to each model
+finalpred=(pred1*0.3+pred2*0.3+pred3*0.4)
+
+
+2. Advanced ensemble models
+
+2.1 Stacking --> Use several models to create one new one
+
+def Stacking(model,train,y,test,n_fold):
+   folds=StratifiedKFold(n_splits=n_fold,random_state=1)
+   test_pred=np.empty((test.shape[0],1),float)
+   train_pred=np.empty((0,1),float)
+   for train_indices,val_indices in folds.split(train,y.values):
+      x_train,x_val=train.iloc[train_indices],train.iloc[val_indices]
+      y_train,y_val=y.iloc[train_indices],y.iloc[val_indices]
+
+      model.fit(X=x_train,y=y_train)
+      train_pred=np.append(train_pred,model.predict(x_val))
+      test_pred=np.append(test_pred,model.predict(test))
+      
+    return test_pred.reshape(-1,1),train_pred
+
+Example with Decision Tree and KNN:
+model1 = tree.DecisionTreeClassifier(random_state=1)
+test_pred1 ,train_pred1=Stacking(model=model1,n_fold=10, train=x_train,test=x_test,y=y_train)
+train_pred1=pd.DataFrame(train_pred1)
+test_pred1=pd.DataFrame(test_pred1)
+
+model2 = KNeighborsClassifier()
+test_pred2 ,train_pred2=Stacking(model=model2,n_fold=10,train=x_train,test=x_test,y=y_train)
+train_pred2=pd.DataFrame(train_pred2)
+test_pred2=pd.DataFrame(test_pred2)
+
+# Create a third model, logistic regression, on the predictions of the decision tree and knn models.
+df = pd.concat([train_pred1, train_pred2], axis=1)
+df_test = pd.concat([test_pred1, test_pred2], axis=1)
+model = LogisticRegression(random_state=1)
+model.fit(df,y_train)
+model.score(df_test, y_test)
+
+2.2 Bagging
+The idea behind bagging is combining the results of multiple models (for instance, all decision trees) to get a generalized result. Here’s a question: If you create all the models on the same set of data and combine it, will it be useful? There is a high chance that these models will give the same result since they are getting the same input. 
+So how can we solve this problem? One of the techniques is bootstrapping.
+Bootstrapping is a sampling technique in which we create subsets of observations from the original dataset, with replacement. The size of the subsets is the same as the size of the original set.
+Bagging (or Bootstrap Aggregating) technique uses these subsets (bags) to get a fair idea of the distribution (complete set). The size of subsets created for bagging may be less than the original set.
+
+2.3 Boosting
+Before we go further, here’s another question for you: If a data point is incorrectly predicted by the first model, and then the next (probably all models), will combining the predictions provide better results? 
+Such situations are taken care of by boosting.
+Boosting is a sequential process, where each subsequent model attempts to correct the errors of the previous model. The succeeding models are dependent on the previous model.
+
+
+3. Algorithms based on Bagging and Boosting
+Bagging algorithms:
+- Bagging meta-estimator
+- Random forest
+
+Boosting algorithms:
+- AdaBoost
+- GBM
+- XGBM
+- Light GBM
+- CatBoost
+
+3.1 Bagging meta-estimator (Classification and Regression)
+For Classification: BaggingClassifier 
+from sklearn.ensemble import BaggingClassifier
+from sklearn import tree
+model = BaggingClassifier(tree.DecisionTreeClassifier(random_state=1))
+model.fit(x_train, y_train)
+model.score(x_test,y_test)
+
+For Regression: BaggingRegressor
+from sklearn.ensemble import BaggingRegressor
+model = BaggingRegressor(tree.DecisionTreeRegressor(random_state=1))
+model.fit(x_train, y_train)
+model.score(x_test,y_test)
+
+### Parameters used in the  algorithms:
+base_estimator:
+It defines the base estimator to fit on random subsets of the dataset.
+When nothing is specified, the base estimator is a decision tree.
+
+n_estimators:
+It is the number of base estimators to be created.
+The number of estimators should be carefully tuned as a large number would take a very long time to run, while a very small number might not provide the best results.
+
+max_samples:
+This parameter controls the size of the subsets.
+It is the maximum number of samples to train each base estimator.
+
+max_features:
+Controls the number of features to draw from the whole dataset.
+It defines the maximum number of features required to train each base estimator.
+
+n_jobs:
+The number of jobs to run in parallel.
+Set this value equal to the cores in your system.
+If -1, the number of jobs is set to the number of cores.
+
+random_state:
+It specifies the method of random split. When random state value is same for two models, the random selection is same for both models.
+This parameter is useful when you want to compare different models.
+ 
+ 
+ 3.2 RandomForest
+ Same than Bagging. Classification and Regression.
+ 
+ 3.3 AdaBoost
+ Same. Classification and Regression.
+ 
+ 3.4 GradienBoosting
+ Same. Classification and Regression.
+ 
+ 3.5 XGBoosting --> Better cuz regularization, handle missing values, tree pruning, parallel procesing, high flexibility
+ Since XGBoost takes care of the missing values itself, you do not have to impute the missing values. 
+ You can skip the step for missing value imputation from the code mentioned above. 
+ Follow the remaining steps as always and then apply xgboost as below.
+ Same. Classification and Regression.
+
+Parameters:
+
+nthread:
+This is used for parallel processing and the number of cores in the system should be entered.
+If you wish to run on all cores, do not input this value. The algorithm will detect it automatically.
+
+eta:
+Analogous to learning rate in GBM.
+Makes the model more robust by shrinking the weights on each step.
+
+min_child_weight:
+Defines the minimum sum of weights of all observations required in a child.
+Used to control over-fitting. Higher values prevent a model from learning relations which might be highly specific to the particular sample selected for a tree.
+
+max_depth:
+It is used to define the maximum depth.
+Higher depth will allow the model to learn relations very specific to a particular sample.
+
+max_leaf_nodes:
+The maximum number of terminal nodes or leaves in a tree.
+Can be defined in place of max_depth. Since binary trees are created, a depth of ‘n’ would produce a maximum of 2^n leaves.
+If this is defined, GBM will ignore max_depth.
+
+gamma:
+A node is split only when the resulting split gives a positive reduction in the loss function. Gamma specifies the minimum loss reduction required to make a split.
+Makes the algorithm conservative. The values can vary depending on the loss function and should be tuned.
+
+subsample:
+Same as the subsample of GBM. Denotes the fraction of observations to be randomly sampled for each tree.
+Lower values make the algorithm more conservative and prevent overfitting but values that are too small might lead to under-fitting.
+
+colsample_bytree:
+It is similar to max_features in GBM.
+Denotes the fraction of columns to be randomly sampled for each tree.
+ 
+3.6 Light GBM --> better with very large datasets
+Same. Classification and Regression
+
+3.7 CatBoost --> with large number of categorical variables with high cardinality.
+You should not perform one-hot encoding for categorical variables. 
+Just load the files, impute missing values, and you’re good to go.
+
+# pip install catboost if necessary
+from catboost import CatBoostRegressor
+categorical_features_indices = np.where(X.dtypes != np.float)[0]  # Take only cat features
+model=CatBoostRegressor(iterations=50, depth=3, learning_rate=0.1, loss_function='RMSE')
+model.fit(X_train, y_train,cat_features=categorical_features_indices,eval_set=(X_validation, y_validation),plot=True)
+
+
+
+
+
