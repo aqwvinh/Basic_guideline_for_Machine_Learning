@@ -37,7 +37,7 @@ import os
 os.environ['KAGGLE_USERNAME'] = "vinhnguyen94" # username from the json file
 os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the json file. Do it each time
 !kaggle competitions download -c hecmontrealdeeplearningcourse # api copied from kaggle
-train = pd.read_csv("train.csv")
+train = pd.read_csv("train.csv", index_col = "chosen column)
 
 # on Colab
 from google.colab import files
