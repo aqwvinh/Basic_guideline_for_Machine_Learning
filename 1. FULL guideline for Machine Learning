@@ -355,6 +355,11 @@ for model, name in zip(models, names):
     # Root mean square error
     score = rmse(model, X_train_scaled, y)
     print(f"- {name}: Mean: {round(score.mean(),3)}, Std: {round(score.std(),3)}")
+    
+# (Variante) When no cross-validation and with accuracy metrics
+for model, name in zip(models,names):
+  score = train_model(model, X_train, y_train, X_valid, y_valid)
+  print(f"- {name}: Accuracy: {round(score,3)}")
 
 
 # (Variante) Model building. Following function is used to train a model and to compute the accuracy score
