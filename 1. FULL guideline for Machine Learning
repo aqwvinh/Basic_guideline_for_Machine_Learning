@@ -113,6 +113,9 @@ To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIR
 # Merge 2 dataframes using the same column
 new_train = pd.merge(train, text1, on='id', how='inner')
 
+# 
+X_test_group.reset_index(drop=False, inplace=True)
+
 # Concatenate train and test data to do the preprocessing once. Not the best strategy but faster
 ntrain = train.shape[0] # Essential to re-split the data before modeling. shape[0] to have only the nb of rows
 ntest = test.shape[0]
