@@ -56,6 +56,9 @@ train.describe() // train.describe(include = ['O']) if we want only the strings 
 #check the numbers of samples and features
 train.shape, test.shape
 
+# To see how many unique values in a column
+train["col"].nunique()
+
 #Save the 'Id' column
 train_ID = train['Id']
 test_ID = test['Id']
