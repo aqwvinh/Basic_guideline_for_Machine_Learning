@@ -358,6 +358,7 @@ for model, name in zip(models, names):
 
 
 # (Variante) Model building. Following function is used to train a model and to compute the accuracy score
+from sklearn import metrics
 def train_model(classifier, train_vector, train_labels, valid_vector, valid_labels, is_neural_net=False):
     # fit the training dataset on the classifier
     classifier.fit(train_vector, train_labels)
