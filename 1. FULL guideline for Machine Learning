@@ -243,8 +243,8 @@ from sklearn.preprocessing import LabelEncoder
 str_cols = ['YrSold','YearRemodAdd','YearBuilt','MoSold','MSSubClass']
 for col in str_cols:
     all_data[col] = all_data[col].astype(str)
-    label = LabelEncoder()
-    arr = label.fit_transform(all_data[col])
+    le = LabelEncoder()
+    arr = le.fit_transform(all_data[col])
     all_data[col] = arr
 
 # Count the occurence for each value for categorical feature
@@ -403,6 +403,8 @@ best_model.fit(X_train_scaled, y_train)
 y_pred = best_model.predict(X_test_scaled)
 or
 y_pred = np.exp(best_model.predict(X_test_scaled))  # If we've applied log to normalize the variables
+or
+y_pred = le.inverse_transform(best_model.predict(X_test_scaled))  # If we have encoded the label before
 
 
 # Save predictions in format used for competition scoring
