@@ -107,6 +107,7 @@ train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascend
 
 
 
+
 3) DATA PREPROCESSING
 To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
 
@@ -124,6 +125,17 @@ all_data = pd.concat((train, test)).reset_index(drop=True)
 all_data.drop(['target'], axis=1, inplace=True)
 print("all_data size is : {}".format(all_data.shape))
 
+# Select rows that contain a value in the column "A" 
+df[df['A'].str.contains("hello")]
+
+
+# Delete only true duplicates
+duplicates = train[train.duplicated('text')]
+duplicates = duplicates[['id', 'text', 'keyword', 'location', 'target']].groupby(['text'], as_index=False).count().sort_values(by='id', ascending=False)
+true_duplicate = duplicates["id"] > 1
+duplicates[true_duplicate]
+index_false_duplicate = duplicates[duplicates["id"] == 1].index 
+duplicates.drop(index_false_duplicate, inplace=True)
 
 ### MISSING VALUES
 # Print only the columns with missing values and there corresponding %
