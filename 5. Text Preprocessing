@@ -1,3 +1,51 @@
+# Remove URL
+import re
+def remove_URL(text):
+    url = re.compile(r'https?://\S+|www\.\S+')
+    return url.sub(r'',text)
+for set in combine:
+  set['text']=set['text'].apply(lambda x : remove_URL(x))
+  
+# Remove HTML Tags
+def remove_html(text):
+    html=re.compile(r'<.*?>')
+    return html.sub(r'',text)
+
+# Remove emoji
+def remove_emoji(text):
+    emoji_pattern = re.compile("["
+                           u"\U0001F600-\U0001F64F"  # emoticons
+                           u"\U0001F300-\U0001F5FF"  # symbols & pictographs
+                           u"\U0001F680-\U0001F6FF"  # transport & map symbols
+                           u"\U0001F1E0-\U0001F1FF"  # flags (iOS)
+                           u"\U00002702-\U000027B0"
+                           u"\U000024C2-\U0001F251"
+                           "]+", flags=re.UNICODE)
+    return emoji_pattern.sub(r'', text)
+    
+# Remove punctuation
+import string
+def remove_punct(text):
+    table=str.maketrans('','',string.punctuation)
+    return text.translate(table)
+    
+    
+# Correct spelling (super long)
+!pip install pyspellchecker
+from spellchecker import SpellChecker
+spell = SpellChecker()
+def correct_spellings(text):
+    corrected_text = []
+    misspelled_words = spell.unknown(text.split())
+    for word in text.split():
+        if word in misspelled_words:
+            corrected_text.append(spell.correction(word))
+        else:
+            corrected_text.append(word)
+    return " ".join(corrected_text)
+
+
+
 # Functions for preprocessing
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
