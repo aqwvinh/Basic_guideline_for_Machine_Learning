@@ -139,6 +139,10 @@ duplicates[true_duplicate]
 index_false_duplicate = duplicates[duplicates["id"] == 1].index 
 duplicates.drop(index_false_duplicate, inplace=True)
 
+# Duplicates that are differently labeled
+df_train['target_relabeled'] = df_train['target'].copy() 
+df_train.loc[df_train['text'] == 'original text', 'target_relabeled'] = 0/1 #Choose the correct label
+
 ### MISSING VALUES
 # Print only the columns with missing values and there corresponding %
 total_miss = all_data.isnull().sum().sort_values(ascending=False)
