@@ -131,7 +131,7 @@ plt.show();
 # Make predictions
 y_pre=model.predict(test_LSTM)
 y_pre=np.round(y_pre).astype(int).reshape(3263)
-sub=pd.DataFrame({'id':test['id'].values.tolist(),'target':y_pre})
+sub=pd.DataFrame({'id':test['id'],'target':y_pre})
 sub.to_csv('submission.csv',index=False)
 
 
