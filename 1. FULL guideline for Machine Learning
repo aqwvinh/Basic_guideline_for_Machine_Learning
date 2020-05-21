@@ -111,6 +111,9 @@ train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascend
 3) DATA PREPROCESSING
 To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
 
+# Concatenate train and test set to apply some data preprocessing
+combine=pd.concat([train,test])
+
 # Merge 2 dataframes using the same column
 new_train = pd.merge(train, text1, on='id', how='inner')
 
