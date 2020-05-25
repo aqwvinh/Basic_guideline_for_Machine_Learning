@@ -28,6 +28,11 @@ for set in combine:
 
 3) DATA CLEANING
 ### Common functions to clean text: lowercase, URL, HTML, emoji, punctuation, twitter handles
+# To keep the train and test separation
+ntrain = train.shape[0]
+ntest = test.shape[0]
+ntrain, ntest
+
 # Create a concatenated df to clean data once
 df = pd.concat([train,test])
 
@@ -85,6 +90,12 @@ def correct_spellings(text):
         else:
             corrected_text.append(word)
     return " ".join(corrected_text)
+
+IMPORTANT !!
+# Resplit the processed train and test sets
+train = df[:ntrain]
+test = df[ntrain:]
+train.shape, test.shape  # Check if the shapes are good
 
 
 4) DATA VECTORIZATION
