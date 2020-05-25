@@ -1,4 +1,36 @@
+Steps:
+0) Understand data
+1) Duplicates and relabel target if necessary
+2) Missing values
+3) Data cleaning
+4) Data vectorization (TF-IDF, Word2Vec and GloVe) and subsequent modeling
+
+
+1) DUPLICATES AND RELABEL TARGET
+# Show duplicates that are have different labels
+df_mislabeled = train.groupby(['text']).nunique().sort_values(by='target', ascending=False)
+df_mislabeled = df_mislabeled[df_mislabeled['target'] > 1]['target']
+df_mislabeled.index.tolist()
+
+# Correct label
+train['target_relabeled'] = train['target'].copy() 
+train.loc[train['text'] == '1st duplicate text', 'target_relabeled'] = 0  # 0 is the example, choose manually for each duplicate
+
+
+2) MISSING VALUES
+# Create a combined list to treat missing values once
+combine = [train, test]
+
+# Replace missing values in col1 and col2 with "Unknown" when it's appropriate
+for set in combine:
+  set[["col1", "col2"]] = set[["col1", "col2"]].fillna("Unknown")
+
+
+3) DATA CLEANING
 ### Common functions to clean text: lowercase, URL, HTML, emoji, punctuation, twitter handles
+# Create a concatenated df to clean data once
+df = pd.concat([train,test])
+
 # Lowercase
 df['text']=df['text'].apply(lambda x : x.lower())  #import string if needed
 
@@ -7,8 +39,8 @@ import re
 def remove_URL(text):
     url = re.compile(r'https?://\S+|www\.\S+')
     return url.sub(r'',text)
-for set in combine:
-  set['text']=set['text'].apply(lambda x : remove_URL(x))
+
+df['text']=df['text'].apply(lambda x : remove_URL(x))
   
 # Remove HTML Tags
 def remove_html(text):
@@ -55,8 +87,9 @@ def correct_spellings(text):
     return " ".join(corrected_text)
 
 
+4) DATA VECTORIZATION
 
-1) Functions for tokenization and lemmatization then tfidf
+A- Functions for tokenization and lemmatization then TF-IDF
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
@@ -91,12 +124,13 @@ def preprocessing_sentence(sentence):
      
 # Preprocessing on the train set. You also have to do it on the test set in the end
 df_train["tokens"] = df_train.text.apply(preprocessing_sentence) # create a new column "tokens" with the preprocessed text
+test["tokens"] = test.text.apply(preprocessing_sentence)
 
 # State clearly the X and y variables
 X = df_train.tokens  # You have to gather all the text in one column
 y = df_train.label
 
-# split the dataset into training and validation datasets 
+# split the dataset into training and validation datasets FOR BIG DATASETS. FOR SMALL DATASETS --> CROSS-VALIDATION
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
                                                    stratify=y) #random_state to have the same alea and strafify to have a balance in label
 
@@ -112,14 +146,53 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 #Initialize vectorizer with identity analyzer
 vect = TfidfVectorizer(analyzer = lambda x: x, max_features = 3000)
 
-#Get the tfidf (format in sparse matrix) to fit the model. fit_transform for train and transform for valid
+# Get the tfidf (format in sparse matrix) to fit the model. fit_transform for train and transform for valid
 X_train = vect.fit_transform(X_train)
-X_valid = vect.transform(X_valid)
-#Display the tfidf_1gram:
+X_valid = vect.transform(X_valid)   # or X = vect.fit_transform(X) with small dataset then cross-validation
+# Display the tfidf_1gram:
 pd.DataFrame(X_train.toarray(), columns=vect.get_feature_names())
 
+# Creating the models: adapt the selected models
+models = [LogisticRegression(random_state= 1), svm.SVC(random_state= 1), SGDClassifier(random_state= 1), GradientBoostingClassifier(random_state= 1), RandomForestClassifier(random_state= 1),
+            XGBClassifier(random_state= 1), DecisionTreeClassifier(random_state= 1), BaggingClassifier(DecisionTreeClassifier(random_state=1)), LGBMClassifier(random_state= 1), AdaBoostClassifier(random_state= 1),
+          KNeighborsClassifier()                                      
+             ]
+names = ['Logistic Regression','Support Vector Classifier','Stochastic Gradient Descent','Gradient Boosting Tree','Random Forest',
+         'XGBoost', 'Decision Tree', 'Bagging Decision Tree', 'Light GBM', 'Adaboost', "KNN"
+         ]
+         
+# Define an error function: F1  # You can adapt the scoring. This is cross-validation (with small dataset)
+from sklearn.model_selection import KFold, cross_val_score
+def f1(model, X, y):
+    f1 = cross_val_score(model, X, y, scoring="f1", cv=5)
+    return f1
 
-2) Word2Vec. Easier and better
+# Perform 5-folds cross-validation to evaluate the models 
+for model, name in zip(models, names):
+    # F1 score
+    score = f1(model, X, y)
+    print(f"- {name}: Mean: {round(score.mean(),3)}, Std: {round(score.std(),3)}")
+    
+# Predictions with the best model
+best_model = SGDClassifier(alpha = 0.0001, loss = "hinge", penalty = "l2", n_iter_no_change= 100, max_iter = 500)  # You can do gridsearch to tune 
+best_model.fit(X, y)
+
+#Get tfidf for test set
+X_test = vect.transform(test.token)
+
+#Get predictions labels
+y_pred = best_model.predict(X_test)
+
+# Save predictions in format used for competition scoring
+output = pd.DataFrame({'id': test["id"],
+                       'target': y_pred})
+output.to_csv('SGD opti.csv', index=False)
+
+print("Your submission was successfully saved!")
+
+
+
+B- WORD2VEC
 Word2Vec creates a dense representation for each word, such that words appearing in similar contexts have similar vectors. 
 To get an embedding for the entire tweet, the mean of all vectors for the words in the tweet are taken. 
 The assumption now is that similar tweets have similar vectors.
@@ -192,6 +265,7 @@ param_grid = [{'estimator' : [LogisticRegression()],
               {'estimator' : [SVC()], 
                'estimator__C' : np.logspace(-1, 1, 3), 
                'estimator__gamma' : np.logspace(-2, 2, 5) / X_train.shape[0]}]
+               
 # create a RandomizedSearchCV object
 word2vec_grid_search = GridSearchCV(
     estimator = word2vec_pipe,
@@ -204,6 +278,7 @@ word2vec_grid_search = GridSearchCV(
 )
 # fit RandomizedSearchCV object
 word2vec_grid_search.fit(X_train, y_train)
+
 # print grid search results
 cols = ['param_estimator',
         'param_estimator__C',    
@@ -214,17 +289,18 @@ pd.options.display.max_colwidth = 50
 word2vec_grid_search_results = pd.DataFrame(word2vec_grid_search.cv_results_).sort_values(by = 'mean_test_score', 
                                                                                           ascending = False)
 word2vec_grid_search_results[cols].head(10)
+
 # predict on test set with the best model from the randomized search
 pred = word2vec_grid_search.predict(X_test)
+
 # submit prediction
 sub=pd.DataFrame({'id':test['id'],'target':y_pred})
 sub.to_csv('submission.csv',index=False)
 print("Your submission was successfully saved!")
 
 
-
-
-3) GloVe for vectorization for LSTM. You have to upload to your environment the file glove.6B.100d. For DL. Long and not efficient
+C- GLOVE for vectorization for LSTM. 
+# You have to upload to your environment the file glove.6B.100d. For DL. Long and not efficient
 from tqdm import tqdm
 from nltk.tokenize import word_tokenize
 import nltk
