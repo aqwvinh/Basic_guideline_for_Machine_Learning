@@ -290,6 +290,10 @@ heatmap_layer_inside = gmaps.heatmap_layer(
 fig.add_layer(heatmap_layer_inside)
 fig
 
+# DOUBLE LINE GRAPH
+ax = df.plot(x = 'month', y= ['Y1', 'Y2'], figsize = (25,10), title = 'yourTitle')
+_ = plt.xticks(fontsize = 16, rotation=45) # tip for changing the ticks
+
 # Bar plot horizontal
 ax = df.sort_values('revenue', ascending=True).plot.barh(x='quartier', y='revenue', figsize = (15,15), title = 'yourTitle')
 # show text on top of bars (vertical) or after bars (horizontal)
@@ -325,6 +329,39 @@ ax3 = sns.lineplot(x=range(0,len(df_plot.Y3)), y='Y3', data=df_plot, sort=False,
 ax1.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 #show plot
 plt.show()
+
+# PIE CHART
+labels = df.country_name
+sizes = df.ratio
+fig1, ax1 = plt.subplots()
+ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
+        shadow=True, startangle=90)
+ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+plt.show()
+
+
+# CONVERT PHONE NUMBER TO COUNTRY CODE
+pip install phonenumbers
+import phonenumbers
+from phonenumbers.phonenumberutil import (
+    region_code_for_country_code,
+    region_code_for_number
+)
+
+country_code = []
+phone_number = []
+incorrect_number = []
+def number_to_countryCode(df):
+    for n in df.phone:
+        try:
+            pn = phonenumbers.parse(f'{n}')
+            code = region_code_for_country_code(pn.country_code)
+            phone_number.append(n)
+            country_code.append(code)
+        except:
+            incorrect_number.append(n)
+            
+
 
 
 ### ENCODING
