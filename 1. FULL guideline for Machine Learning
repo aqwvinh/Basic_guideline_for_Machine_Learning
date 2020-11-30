@@ -1,72 +1,45 @@
-0) Spend time to study the data. Here are some advice:
-- check the % that train data represent
-- plot label distribution
-- check features correlation
-- check missing values
-- convert strings into floats. Ex: gender, class etc 
-- drop, convert and create new features --> feature engineering
-- think as "observations then decisions"
-- use pipelines to avoid data leakage (too much preprocessing before split data)
+PERSONAL TIPS THAT I MET DURING DS PROJECTS
 
-STEPS TO FOLLOW FOR CLASSICAL TASKS (Regression, Classification, Clustering)
 1)IMPORTATION
 # data analysis and wrangling
 import pandas as pd
 import numpy as np
 import random as rnd
+pd.set_option('display.max_columns', None) # To show all columns
+
+# Date
+from datetime import datetime, date, timedelta
+import calendar
 
 # visualization
 import seaborn as sns
 import matplotlib.pyplot as plt
 %matplotlib inline
 
-# machine learning
-from sklearn.linear_model import LogisticRegression, LinearRegression, BayesianRidge, ElasticNet, Lasso, SGDRegressor, Ridge
-from sklearn.svm import SVC, LinearSVC, SVR
-from sklearn.ensemble import RandomForestClassifier, ExtraTreesRegressor, GradientBoostingRegressor, RandomForestRegressor
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.naive_bayes import GaussianNB
-from sklearn.linear_model import Perceptron
-from sklearn.linear_model import SGDClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.kernel_ridge import KernelRidge
-
-### Import dataset 
+Import Datasets 
 # from Kaggle
 import os
 os.environ['KAGGLE_USERNAME'] = "vinhnguyen94" # username from the json file
 os.environ['KAGGLE_KEY'] = "ee939400b83c8ef989727a70f29fab39" # key from the json file
 !kaggle competitions download -c hecmontrealdeeplearningcourse # api copied from kaggle. Get the API on the address link
 train = pd.read_csv("train.csv", index_col = "chosen column)
-
 # on Colab
 from google.colab import files
 uploaded = files.upload()
 import io
 train=pd.read_csv(io.BytesIO(uploaded['train.csv']))
-
 # on Jupyter
-On Mac: open new window terminal, slide the data and copy the path
-train = pd.read_csv("/Users/vinhnguyen/Desktop/Kaggle/Titanic/train.csv")
+ttrain = pd.read_csv('../Datasets/train.csv')
 
 train.describe() // train.describe(include = ['O']) if we want only the strings information. include = 'all' is possible
 
 # Check if the target variable is normal, sometimes there can be very bad mistake that would ruin the model (like a negative price)
 
-#check the numbers of samples and features
-train.shape, test.shape
+train["col"].nunique() # To see how many unique values in a column
+train.value_counts()  # To see the values distribution
 
-# To see how many unique values in a column
-train["col"].nunique()
 
-#Save the 'Id' column
-train_ID = train['Id']
-test_ID = test['Id']
-#Now drop the  'Id' colum since it's unnecessary for the prediction process.
-train.drop("Id", axis = 1, inplace = True)
-test.drop("Id", axis = 1, inplace = True)
-
-2) Understand the data
+2) UNDERSTAND DATA
 Select the most important features to check the outliers and to check multicorrelation (reduce nb of features)
 # Heatmap to see how features are correlated
 corrmat = train.corr()
@@ -81,9 +54,7 @@ sns.set(font_scale=1.25)
 hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
 plt.show()
 
-# Plot train Target
-import matplotlib.pyplot as plt
-import seaborn as sns
+# Plot train Target distribution
 sns.countplot(df_train.target)
 plt.xlabel('Target')
 plt.title('Target distribution')
@@ -91,53 +62,52 @@ plt.title('Target distribution')
 # Spot outliers. Strategy: delete very bad outliers. not all outliers to have a model robust on outliers
 fig, ax = plt.subplots()
 feature = "TotalBsmtSF"
-ax.scatter(x = train[feature], y = train['SalePrice'])
-plt.ylabel('SalePrice', fontsize=13)
+target = 'SalePrice'
+ax.scatter(x = train[feature], y = train[target])
+plt.ylabel(target, fontsize=13)
 plt.xlabel(feature, fontsize=13)
 plt.show()
 # Drop chosen outliers
-train = train.drop(train[(train['TotalBsmtSF']>4000) & (train['SalePrice']<300000)].index)  # Example for the house pricing
+train = train.drop(train[(train[feature]>4000) & (train[target]<300000)].index)  # Example for the house pricing
 
-# Multiple plots TO DO
+# Multiple plots TO COMPLETE
 g = sns.FacetGrid(train, col='y') # Initialize the FacetGrid with the data (train) and the target var
 g.map(plt.hist, 'X', bins=20) # Call plotting function .map with interval of 20 (for age for ex)
 
-# Correlation between Gender and Target using the mean
-train[["Sex","Target"]].groupby(['Sex']).mean().sort_values(by= "Target", ascending = False)
+# Groupby using different aggregation methods: mean and sum
+df_quartier = df.groupby(['region','quartier']).agg(revenue_brut_sum = ('revenue_brut_year', 'sum'),
+                                                    revenue_brut_night_mean = ('revenue_brut_moyen_night', 'mean')).reset_index()
 
-
+# Move specific col to specific place
+y_name = 'arnd'
+y = df.pop(y_name)
+df.insert(1, y_name, y). # Put at 2nd column
 
 
 3) DATA PREPROCESSING
 To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
 
-# Concatenate train and test set to apply some data preprocessing
+# CONCATENATE train and test set to apply some data preprocessing
 combine=pd.concat([train,test])
+# MERGE 2 dataframes using the same column
+new_train = pd.merge(train, text1, on='id', how='outer')
+# MAP one column but need unique index
+housing['quartier'] = housing.housing_id.map(df_quartier.set_index('housing_id')['quartier'])
 
-# Merge 2 dataframes using the same column
-new_train = pd.merge(train, text1, on='id', how='inner')
+# CREATE NEW COLUMN ON CONDITION
+conditions = [(housing.postal_code.str.startswith('75')),(housing.postal_code.str.startswith(('78','91', '92', '93', '94', '95')))]
+values = ['paris', 'banlieue']
+housing['region'] = np.select(conditions, values)
 
-# Reset the index
-test.reset_index(drop=False, inplace=True)
-
-# Concatenate train and test data to do the preprocessing once. Not the best strategy but faster
-ntrain = train.shape[0] # Essential to re-split the data before modeling. shape[0] to have only the nb of rows
-ntest = test.shape[0]
-y_train = train.target.values
-all_data = pd.concat((train, test)).reset_index(drop=True)
-all_data.drop(['target'], axis=1, inplace=True)
-print("all_data size is : {}".format(all_data.shape))
-
-# Select rows that contain a value in the column "A" 
-df[df['A'].str.contains("hello")]
-
+# Select rows that contain a value in a specific column
+df[df['col'].str.contains("hello")]
 
 # Delete only true duplicates
 train = train.drop_duplicates("col", keep = "first")
-or
+or PERSONALIZED 
 duplicates = train[train.duplicated('text')]
 duplicates = duplicates[['id', 'text', 'keyword', 'location', 'target']].groupby(['text'], as_index=False).count().sort_values(by='id', ascending=False)
-true_duplicate = duplicates["id"] > 1
+true_duplicate = duplicates["id"] > 1. # Can adapt
 duplicates[true_duplicate]
 index_false_duplicate = duplicates[duplicates["id"] == 1].index 
 duplicates.drop(index_false_duplicate, inplace=True)
@@ -146,18 +116,43 @@ duplicates.drop(index_false_duplicate, inplace=True)
 df_train['target_relabeled'] = df_train['target'].copy() 
 df_train.loc[df_train['text'] == 'original text', 'target_relabeled'] = 0/1 #Choose the correct label
 
+# Create column with tuple. Useful for GPS using lat and lnt
+housing['GPS'] = tuple(zip(housing.lat, housing.lng))
+
+# CALCULATE DISTANCE (haversine distance)
+pip install haversine # install module
+from haversine import haversine
+name = quartiers_paris.L_QU.unique() # Distance of each house from every quarters in Paris
+for q,n in zip(quartiers_paris.GPS, name):
+  distances = []
+  for h in housing_paris.GPS:
+    distances.append(haversine(h,q))
+  housing_paris[n] = distances
+  
+# Create function assign_quartier
+def assign_quartier(df):
+  min_val_col_name = df.idxmin(axis=1). # Take the quartier with the min distance
+  df['quartier'] = min_val_col_name
+  
+# Keep rows with specific values in a specific column  
+new_amenities = new_amenities.loc[new_amenities.title.isin(selected_amenities)] # Set selected_amenities list before
+
+
 ### MISSING VALUES
-# Print only the columns with missing values and there corresponding %
-total_miss = all_data.isnull().sum().sort_values(ascending=False)
-percent_miss = (all_data.isnull().sum()/all_data.isnull().count()).sort_values(ascending=False)
+# Print only the columns with missing values and their corresponding %
+df_mv = reservation2
+total_miss = df_mv.isnull().sum().sort_values(ascending=False)
+percent_miss = (df_mv.isnull().sum()/df_mv.isnull().count()).sort_values(ascending=False)
 missing_data = pd.concat([total_miss, percent_miss], axis=1, keys=['Total_miss', 'Percent_miss'])
-// Strategy: When lots of features, we can delete the features with high % of missing values (let's say 15%). Check if these variables are important
-// It's better to drop variables with high % of missing values instead of replacing by "Unknown" cuz it would create low variance which is uniformative for ML models.  
+missing_data[missing_data.Percent_miss > 0]
+THEN
+mv_features = ['tax', 'fees']
+for f in mv_features:
+    reservation2[f] = reservation2[f].fillna(0)
 
 # (Variante) Print only the columns with missing values
 missing_val_count_by_column = (df.isnull().sum())
 print(missing_val_count_by_column[missing_val_count_by_column > 0])  # Print only the columns with missing values
-
 # (Variante) Count the number of NaN per column. If we don't have so much features
 len(train) - train.count()
 
@@ -212,18 +207,42 @@ guess_ages = np.zeros((2,3))  # (2,3) cuz Sex is 2 and Pclass is 3
                     'Age'] = guess_ages[i,j]
 
     df['Age'] = df['Age'].astype(int)
-    
-    
+
+# Drop na from specific column
+df = df.dropna(subset = ['colA'])
+
+# Replace date for specific row
+reservation.at[reservation.loc[reservation.code == 'resa_code'].index, 'departure_date']= pd.Timestamp('2019-12-31')
+
+# Take the date of the first resa 
+reservation['first_resa'] = reservation.groupby(['housing_id', 'housing_name'])['arrival_date'].transform("min") # Add column first_resa with the earliest resa per housing
+ 
+ 
+# Split resa per day: have one row per day of reservation
+reservation_day0 = reservation2[['id', 'arrival_date', 'departure_date']]
+reservation_day0 = pd.melt(reservation_day0, id_vars='id', value_name='date')
+reservation_day0.date = pd.to_datetime(reservation_day0.date)
+reservation_day0.set_index('date', inplace=True)
+reservation_day0.drop('variable', axis=1, inplace=True)
+reservation_day = reservation_day0.groupby('id').resample('D').ffill().reset_index(level=0, drop=True).reset_index().  # Resample per day
+reservation_day = pd.merge(reservation2, reservation_day)
+# Drop latest day per resa because we only count the nb of nights and not days
+reservation_day= reservation_day.drop(reservation_day[reservation_day['departure_date'] == reservation_day['date']].index)
+ 
+ 
+## CREATE FUNCTION with if condition
+def is_studio_price(bedroom_count, nightPrice):
+  is_studio = 1 if bedroom_count == 0 else 0
+  if is_studio ==1:
+    nightPrice *= 0.10 # Example: decrease nightPrice by 90% if it is a studio
+  return nightPrice
+ 
 ### Categorizing
 # Create ranges of age for plotting
 train['Age_bins']=pd.cut(x=train['Age'], bins=[0,19, 39, 59,79], labels=['0-10s','20-30s','40-50s','60-70s']) # number of labels should be one less than bins
 or (BETTER)
 train['AgeBand'] = pd.cut(train['Age'], 5) # Create 5 categories of Age. We can add labels if we want. Use qcut if to have balanced categories
 
-# Group the AgeBand depending on the target variable
-train.groupby(["Age_bins"]).mean()
-or
-train[['AgeBand', 'Survived']].groupby(['AgeBand'], as_index=False).mean().sort_values(by='AgeBand', ascending=True)
 
 pd.crosstab(train.Age_bins, train.Survived).plot(kind="bar") #Survived = target
 
@@ -244,6 +263,7 @@ for dataset in combine:
 # HOUSE PRICING. Create a variable for the total size of the house. Try to group correlated variables
 all_data["tot_surface"] = all_data["TotalBsmtSF"] + all_data["1stFlrSF"] + all_data["2ndFlrSF"]
 
+
 ### TO GO FURTHER: CHECK NORMALITY. The variables should be normal
 from scipy import stats
 #histogram and normal probability plot
@@ -256,8 +276,62 @@ and don't forget: y_pred = np.exp(y_pred)
 // Skewness measures the lack of symmetry in data distribution. It has to be close to 0
 // Kurtosis is used to measure outliers present in the distribution. It has to be less than 3.
 
-### Encoding
+
+
+### GRAPH
+# Gmaps
+conda install -c conda-forge gmapsimport gmaps
+gmaps.configure(api_key='YourAPI')
+fig = gmaps.figure()
+heatmap_layer_inside = gmaps.heatmap_layer(
+  df[['lat','lng']],
+  weights=df[criterion]
+)
+fig.add_layer(heatmap_layer_inside)
+fig
+
+# Bar plot horizontal
+ax = df.sort_values('revenue', ascending=True).plot.barh(x='quartier', y='revenue', figsize = (15,15), title = 'yourTitle')
+# show text on top of bars (vertical) or after bars (horizontal)
+bars = ax.patches
+# Get labels to show
+labels = round(df.revenue,0).astype(int)
+for rect, label in zip(bars, labels):
+    height = rect.get_height()
+    ax.text(rect.get_x() + rect.get_width() / 2, height + 5, label,
+            ha='center', va='bottom')
+
+# COMBINED BAR AND LINE CHART (SEABORN)
+fig, ax1 = plt.subplots(figsize=(20,9))
+#bar plot creation
+color1 = 'lightgray'
+ax1.set_title('yourTitle', fontsize=24)
+ax1.set_xlabel('X', fontsize=14)
+ax1 = sns.barplot(x='X', y='Y', data = df_plot, color = color1)
+ax1.set_ylabel('Y', fontsize=14, color = "black")
+plt.xticks(rotation=45) # for better reading
+#specify we want to share the same x-axis
+ax2 = ax1.twinx()
+#line plot creation
+color2 = "green"
+ax2.set_ylabel('Y2', fontsize=14, color = color2 )
+ax2 = sns.lineplot(x=range(0,len(df_plot.Y2)), y='Y2', data = df_plot, sort=False, color=color2)
+# Show yearly occ_rate
+ax3 = ax2.twiny()
+# line plot creation
+color3 = 'navy'
+ax3 = sns.lineplot(x=range(0,len(df_plot.Y3)), y='Y3', data=df_plot, sort=False, color = color3)
+# Round values for axis
+ax1.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
+#show plot
+plt.show()
+
+
+### ENCODING
 BEST PRACTICE : MANUALLY ENCODE WHEN ORDER MATTERS AND ONE-HOT ENCODE WHEN NO HIERARCHY
+
+# Manual encoding
+housing.id = np.where(housing.id > 0, 1, 0)
 
 # Converting numeric features to categorical features. Especially for the year or month --> need to create categories
 from sklearn.preprocessing import LabelEncoder
