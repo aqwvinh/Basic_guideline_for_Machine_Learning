@@ -99,6 +99,11 @@ conditions = [(housing.postal_code.str.startswith('75')),(housing.postal_code.st
 values = ['paris', 'banlieue']
 housing['region'] = np.select(conditions, values)
 
+# Set max value in a column to 30
+maxVal = 30
+df['col'] = df['col'].where(df['col'] <= maxVal, maxVal)
+
+
 # Select rows that contain a value in a specific column
 df[df['col'].str.contains("hello")]
 
