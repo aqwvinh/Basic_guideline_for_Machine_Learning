@@ -367,7 +367,9 @@ def number_to_countryCode(df):
             incorrect_number.append(n)
             
 
-
+## DATA MANIPULATION
+# Take value of a cell in a dataframe refering specific value in a column ==> we get the string and not the array
+neighborhood = df[df.housing_id == id].neighborhood.values[0]
 
 ### ENCODING
 BEST PRACTICE : MANUALLY ENCODE WHEN ORDER MATTERS AND ONE-HOT ENCODE WHEN NO HIERARCHY
