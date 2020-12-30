@@ -7,6 +7,27 @@ import numpy as np
 import random as rnd
 pd.set_option('display.max_columns', None) # To show all columns
 
+## Connect to SQL database and make some HTTP requests using authentification token using requests library
+# Get token. 1-day period
+url_token = 'API_token'
+credentials = {'mail': 'user_mail,
+         'password': 'user_password'}
+res = requests.post(url_token, data = credentials)
+token = res.json()['token']
+
+# Get housing with the token and transform to DataFrame to be able to manipulate data in Jupyter Notebook. Get specific columns, not all columns in database
+url_housing = 'API_housing?columns=host_id;housing_id;housing_name' 
+headers = {'Authorization': f'Bearer {token}'}  # Need to use authorization header in every requests
+housing_req = requests.get(url_housing, headers=headers)
+housing = housing_req.json()
+housing = pd.DataFrame(housing)
+
+# Put new housing neighborhood (modify value in directly database)
+for id in update_housing.housing_id:
+    url_housing_put = f'API_housing/{id}'
+    param = {'neighborhood': f'{update_housing.loc[update_housing.housing_id == id].neighborhood.values[0]}'}
+    housing_put = requests.put(url_housing_put, data = param, headers = headers)
+
 # Date
 from datetime import datetime, date, timedelta
 import calendar
