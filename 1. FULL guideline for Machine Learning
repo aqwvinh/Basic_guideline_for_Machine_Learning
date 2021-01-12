@@ -455,6 +455,10 @@ for feature in cat_features:
 
 
 
+GODD PRACTICE: USE A CLASS TRANSFORMER. ==> Define a class that does the data preprocessing on the train then on the test set
+
+
+
 4) Modeling
 # split the dataset into training and validation datasets
 from sklearn import model_selection
