@@ -1,3 +1,106 @@
+Typical steps and tips for features engineering (not comprehensive)
+- Check variables type : numerical (discrete/continuous), categorical (ordinal/nominal), date and mixed variables (numbers and labels in the same observation like car numberplate or in ≠ observations)
+- Check MV (understand the mechanisms - MCAR/MNAR/MAR - to choose the right imputation technique - mean/median/mode/arbitrary/frequent/indicator/random/knn etc)
+- Check cardinality (high cardinaly may cause overfitting and operationalisation problems)
+- Check rare labels (Same pb than with high cardinality. Regroup rare labels may improve the performance)
+- Encoding (OneHot/Label/CountFrequency/Mean/WoE etc)
+- Binning/Discretization (create intervals for continuous vars - EqualWidth/EqualFrequency/DecisionTree)
+- Outliers (Detection with IQR, remove or treat as MV or discretization or capping=fix limit values. Pb: distorts var distribution)
+- Scaling (Standardization/MinMaxScaling/RobustScaler etc)
+
+Once all these steps are done and we've identified our FeatEngin steps, 
+- Pipeline
+
+TIPS
+- MV: When ≤5%, replace by mean/median and mode for cat vars. When >5%, mean/median and ADD binary missing indicator for num and "Missing" label for cat
+- Discretization: Find the optimal intervals using discretization with decision trees cuz create a monotonic relationship (re-order discreted vars) ==> good with 
+    linear models and no need to do discretization then ordinal cat
+- Scaling: RobustScaler ignores outliers for standardization. Important step EXCEPT FOR TREE --> NO NEED TO DO SCALING FOR TREE
+- Encoding: Better to fit on the train only but acceptable to fit on test if we know all the values. NO SCALING ON TEST
+
+
+
+
+
+PIPELINE EXAMPLE USING FEATURE-ENGIN LIBRARY
+# for feature engineering
+from sklearn.preprocessing import StandardScaler
+from feature_engine import missing_data_imputers as mdi
+from feature_engine import discretisers as dsc
+from feature_engine import categorical_encoders as ce
+
+
+# First, make a list of the num and cat variables
+categorical = [var for var in df.columns if df[var].dtype=='O']
+numerical = [var for var in df.columns if df[var].dtype!='O']
+# list of variables that contain year information for num vars that are not treated as num
+year_vars = [var for var in numerical if 'Yr' in var or 'Year' in var]
+# find discrete variables : To identify discrete variables, select from all the numerical ones, those that contain a finite and small number of distinct values.
+discrete = []
+for var in numerical:
+    if len(data[var].unique()) < 20 and var not in year_vars:
+        print(var, ' values: ', data[var].unique())
+        discrete.append(var)
+
+house_pipe = Pipeline([
+
+    # missing data imputation
+    ('missing_ind', mdi.AddNaNBinaryImputer(  # add missing indicator
+        variables=['LotFrontage', 'MasVnrArea',  'GarageYrBlt'])),
+    ('imputer_num', mdi.MeanMedianImputer(imputation_method='median',  # replace MV by the median
+                                          variables=['LotFrontage', 'MasVnrArea',  'GarageYrBlt'])),
+    ('imputer_cat', mdi.CategoricalVariableImputer(variables=categorical)),  # add string 'missing' to all cat var with MV
+
+    # categorical encoding
+    ('rare_label_enc', ce.RareLabelCategoricalEncoder(
+        tol=0.05, n_categories=6, variables=categorical+discrete)),
+    ('categorical_enc', ce.OrdinalCategoricalEncoder(
+        encoding_method='ordered', variables=categorical+discrete)),
+
+    # discretisation + encoding
+    ('discretisation', dsc.EqualFrequencyDiscretiser(
+        q=5, return_object=True, variables=numerical)), # Create 5 intervals
+    ('encoding', ce.OrdinalCategoricalEncoder(
+        encoding_method='ordered', variables=numerical)), # encode results intervals reorder to create monotonic
+
+    # feature Scaling
+    ('scaler', StandardScaler()), # scale cuz we use a linear model. Better to use RobustScaler to handle outliers
+    
+    # regression
+    ('model', Lasso(random_state=0))
+])
+
+
+# let's fit the pipeline
+house_pipe.fit(X_train, y_train)
+
+# let's get the predictions
+X_train_preds = house_pipe.predict(X_train)
+X_test_preds = house_pipe.predict(X_test)
+
+# check model performance:
+print('train mse: {}'.format(mean_squared_error(y_train, X_train_preds)))
+print('train rmse: {}'.format(sqrt(mean_squared_error(y_train, X_train_preds))))
+print('train r2: {}'.format(r2_score(y_train, X_train_preds)))
+print()
+print('test mse: {}'.format(mean_squared_error(y_test, X_test_preds)))
+print('test rmse: {}'.format(sqrt(mean_squared_error(y_test, X_test_preds))))
+print('test r2: {}'.format(r2_score(y_test, X_test_preds)))
+
+
+# let's explore the importance of the features
+# the importance is given by the absolute value of the coefficient
+# assigned by the Lasso
+importance = pd.Series(np.abs(house_pipe.named_steps['lasso'].coef_))
+importance.index = list(final_columns)+['LotFrontage_na', 'MasVnrArea_na',  'GarageYrBlt_na']
+importance.sort_values(inplace=True, ascending=False)
+importance.plot.bar(figsize=(18,6))
+
+
+
+
+
+OLD CODE (from May 2020)
 ### ENCODING
 FIT ONLY ON TRAIN SET cuz overfitting otherwise. Hint: fit_transform --> train. So fit on train and then transform on train,val and test
 ENCODING WHEN THERE IS AN ORDER, category. Not number of
@@ -32,7 +135,7 @@ low_cardinality_cols = [col for col in object_cols if X_train[col].nunique() < 1
 # Columns that will be label encoded
 high_cardinality_cols = list(set(object_cols)-set(low_cardinality_cols))
 
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.preprocessing import OneHotEncoder --> PANDAS ONE-HOT IS EASIER
 OH_encoder = OneHotEncoder(handle_unknown='ignore', sparse=False)  # ignore to avoid errors when the validation data contains classes that aren't represented in the training data and sparse = False to have a np.array and not a matrix
 OH_cols_train = pd.DataFrame(OH_encoder.fit_transform(X_train[object_cols/low_cardinality_cols]))  # Apply one-hot encoder to each column with categorical data
 OH_cols_valid = pd.DataFrame(OH_encoder.transform(X_valid[object_cols/low_cardinality_cols]))   # object_cols is the list of categorical vars
