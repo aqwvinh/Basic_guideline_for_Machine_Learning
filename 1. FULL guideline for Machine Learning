@@ -163,6 +163,9 @@ def assign_quartier(df):
 # Keep rows with specific values in a specific column  
 new_amenities = new_amenities.loc[new_amenities.title.isin(selected_amenities)] # Set selected_amenities list before
 
+# Check amenities distribution (multiple items per row that are separated by ",")
+pd.Series(np.concatenate(listings['amenities'].map(lambda x: x.split(",")))).value_counts()
+
 
 ### MISSING VALUES
 # Print only the columns with missing values and their corresponding %
@@ -301,6 +304,16 @@ y_train = np.log(y_train)   #Recheck now. Be careful on the submission, we need 
 and don't forget: y_pred = np.exp(y_pred)
 // Skewness measures the lack of symmetry in data distribution. It has to be close to 0
 // Kurtosis is used to measure outliers present in the distribution. It has to be less than 3.
+
+## Detect outliers
+plt.boxplot(df['target'])
+Q1 = df['target'].quantile(0.25)
+Q3 = df['target'].quantile(0.75)
+IQR = Q3 - Q1
+print(IQR)
+df['target'] < (Q1 - 1.5 * IQR)  #lower bound
+df['target'] > (Q3 + 1.5 * IQR) #upper bound
+
 
 
 
