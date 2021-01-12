@@ -456,10 +456,27 @@ for feature in cat_features:
 
 
 4) Modeling
+# split the dataset into training and validation datasets
+from sklearn import model_selection
+X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
+                                                   stratify=y) #random_state to have the same alea and strafify to have a balance in label
 
-# Split train and test sets
-train = all_data[:ntrain]
-test = all_data[ntrain:]
+TIPS : 
+CROSS-VALIDATION ON THE TRAIN SET 
+For small dataset (<100K rows is a small dataset) => cross-validation
+How choose K ? Value of K shouldn’t be too small or too high, ideally 5 to 10 depending on the data size. 
+         The higher value of K leads to less biased model (but large variance might lead to over-fit)
+               
+from sklearn.model_selection import cross_val_score
+from sklearn import metrics  --> See list of metrics here : https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
+# Example of 5-fold cross-validation with SVM Regressor
+model = svm.SVR(kernel='linear', C=1, random_state=42)
+scores = cross_val_score(model, X_train, y_train, cv=5, scoring = "neg_root_mean_squared_error") ==> "scores" gives an array with the multiple scores
+# Give the mean score
+print(f" {round(scores.mean(),2)} score with a standard deviation of {round(scores.std(),2)}"
+
+
+
 
 # Summarize the X and y variables. Reminder: y_train can be normalized by the log function
 X = train.drop("label", axis = 1)
@@ -467,13 +484,8 @@ y = train.label   # check if the target variable is normalized: y_train = np.log
 X_test = test
 X.shape, y.shape, X_test.shape  # To check if the shapes are correct
 
-When the dataset is big enough, no need to do cross-validation so we can split into train and valid
-# split the dataset into training and validation datasets
-from sklearn import model_selection
-X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
-                                                   stratify=y) #random_state to have the same alea and strafify to have a balance in label
 
-# Manually do the split
+# Manually do the split. NOT best practice
 // train = 80% first rows, then valid = 10% and finally test = 10%. Order matters here
 def get_data_splits(df, valid_fraction=0.1):
     valid_fraction = 0.1
@@ -503,7 +515,7 @@ names = ['Linear Regression','Support Vector Regression','Stochastic Gradient De
          'Lasso Regression','Lasso Regression 2','Ridge Regression','Bayesian Ridge Regression','Kernel Ridge Regression','Kernel Ridge Regression 2',
          'Elastic Net Regularization','Elastic Net Regularization 2','Extra Trees Regression']
 
-# Define a root mean square error function
+# Define a root mean square error function using cross-validation
 from sklearn.model_selection import KFold, cross_val_score
 def rmse(model, X, y):
     rmse = np.sqrt(-cross_val_score(model, X, y, scoring="neg_mean_squared_error", cv=5))
