@@ -330,6 +330,12 @@ for rect, label in zip(bars, labels):
     height = rect.get_height()
     ax.text(rect.get_x() + rect.get_width() / 2, height + 5, label,
             ha='center', va='bottom')
+  
+# Bar plot from df with values as text on the graph  
+ax = sns.barplot(x='category', y="price", data=df_plot)
+for _, row in to_draw.iterrows(): #Add text on graph
+    ax.text(row.name,row.price, round(row.price,2), color='black', ha="center")
+ax.set_title('My_Title') # Add title
 
 # COMBINED BAR AND LINE CHART (SEABORN)
 fig, ax1 = plt.subplots(figsize=(20,9))
