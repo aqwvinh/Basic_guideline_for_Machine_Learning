@@ -82,11 +82,9 @@ X_train_preds = house_pipe.predict(X_train)
 X_test_preds = house_pipe.predict(X_test)
 
 # check model performance:
-print('train mse: {}'.format(mean_squared_error(y_train, X_train_preds)))
 print('train rmse: {}'.format(sqrt(mean_squared_error(y_train, X_train_preds))))
 print('train r2: {}'.format(r2_score(y_train, X_train_preds)))
 print()
-print('test mse: {}'.format(mean_squared_error(y_test, X_test_preds)))
 print('test rmse: {}'.format(sqrt(mean_squared_error(y_test, X_test_preds))))
 print('test r2: {}'.format(r2_score(y_test, X_test_preds)))
 
@@ -104,18 +102,18 @@ importance.plot.bar(figsize=(18,6))
 
 
 OLD CODE (from May 2020)
-### ENCODING
+## ENCODING
 FIT ONLY ON TRAIN SET cuz overfitting otherwise. Hint: fit_transform --> train. So fit on train and then transform on train,val and test
 ENCODING WHEN THERE IS AN ORDER, category. Not number of
 
 
-# Get list of categorical variables
+##### Get list of categorical variables
 s = (X_train.dtypes == 'object')
 object_cols = list(s[s].index)
 or
 object_cols = [col for col in X_train.columns if X_train[col].dtype == "object"]
 
-## Convert categorical variables into integers using LabelEncoder (for when there are several different names). It can already be integers but need to encode them into labels for new features
+##### Convert categorical variables into integers using LabelEncoder (for when there are several different names). It can already be integers but need to encode them into labels for new features
 // Essential to encode categorical vars into numerical for the algorithms. Missing values treatment before
 from sklearn.preprocessing import LabelEncoder
 cat_features = ['ip', 'app', 'device', 'os', 'channel'] # Categories to encode
@@ -126,16 +124,16 @@ for feature in cat_features: # Goal is to create new features in the same datafr
  
 // Then you have to one-hot encode if the features are multi-class but no if too many classes --> use LightGBM model then. 
 
-# One-hot encoding
+### One-hot encoding
 Strategy: Only one-hot encode columns with relatively low cardinality (few unique values). Then, high cardinality columns can be label encoded.
-# Get cardinality (number of unique entries in each column with categorical data) to check if we can do one-hot encoding
+##### Get cardinality (number of unique entries in each column with categorical data) to check if we can do one-hot encoding
 object_nunique = list(map(lambda col: X_train[col].nunique(), object_cols))
 d = dict(zip(object_cols, object_nunique))
 sorted(d.items(), key=lambda x: x[1]) # Print number of unique entries by column, in ascending order
 
-# Columns that will be one-hot encoded (cardinality < 10)
+##### Columns that will be one-hot encoded (cardinality < 10)
 low_cardinality_cols = [col for col in object_cols if X_train[col].nunique() < 10]
-# Columns that will be label encoded
+##### Columns that will be label encoded
 high_cardinality_cols = list(set(object_cols)-set(low_cardinality_cols))
 
 from sklearn.preprocessing import OneHotEncoder --> PANDAS ONE-HOT IS EASIER
@@ -149,8 +147,8 @@ num_X_valid = X_valid.drop(object_cols, axis=1)
 OH_X_train = pd.concat([num_X_train, OH_cols_train], axis=1) # Add one-hot encoded columns to numerical features  
 OH_X_valid = pd.concat([num_X_valid, OH_cols_valid], axis=1)
 
-## Statistics encoder so fit only on train set
-# Count encoder: replaces each categorical value with the number of times it appears in the dataset. The common/important values get their own grouping
+### Statistics encoder so fit only on train set
+##### Count encoder: replaces each categorical value with the number of times it appears in the dataset. The common/important values get their own grouping
 import category_encoders as ce
     # Create the count encoder
     count_enc = ce.CountEncoder(cols=cat_features)
@@ -160,19 +158,19 @@ import category_encoders as ce
     train_encoded = train.join(count_enc.transform(train[cat_features]).add_suffix('_count'))
     valid_encoded = valid.join(count_enc.transform(valid[cat_features]).add_suffix('_count'))
 
-# Target encoding: replaces a categorical value with the average value of the target. FIT ONLY ON TRAIN SET
+### Target encoding: replaces a categorical value with the average value of the target. FIT ONLY ON TRAIN SET
 target_encoder = ce.TargetEncoder(cols=cat_features)
 target_encoder.fit(train[cat_features], train['target'])    # Fit the encoder using the categorical features and target
 train_encoded = train.join(target_encoder.transform(train[cat_features]).add_suffix("_target"))   # Apply the encoder
 // Same for Catboost. Better with lightGBM
 
 
-# Add new columns for timestamp features day, hour, minute, and second so we can use time in the model
+### Add new columns for timestamp features day, hour, minute, and second so we can use time in the model
 df['day'] = df['time'].dt.day.astype('uint8')
 df['hour'] = df['time'].dt.hour.astype('uint8') #etc for minute and second. Important to convert time into categorical feature
 
 
-# Train with lightGBM (after manual split)
+### Train with lightGBM (after manual split)
 import lightgbm as lgb
 dtrain = lgb.Dataset(train[feature_cols], label=train['target'])  # feature_cols = ["x1", "x2", etc]
 dvalid = lgb.Dataset(valid[feature_cols], label=valid['target'])
@@ -187,7 +185,7 @@ bst = lgb.train(param, dtrain, num_round, valid_sets=[dvalid], early_stopping_ro
 // Do interaction between categorical variables to have more information
 interactions = df['category'] + "_" + ks['country'] --> "Poetry_GB" or "NarrativeFilm_US"  # Then label encode 
 
-# Add interaction features for each pair of categorical features using itertools and encode them
+### Add interaction features for each pair of categorical features using itertools and encode them
 import itertools
 cat_features = ['ip', 'app', 'device', 'os', 'channel']
 interactions = pd.DataFrame(index=clicks.index)  # df = clicks
@@ -200,7 +198,7 @@ for col1,col2 in itertools.combinations(cat_features, 2):    # Iterate through e
     
  
 ### FEATURE SELECTION. Two methods: univariate (for small data) and feature selection with L1 regularization (more powerful but slow)
-# Univariate feature selection: measure how strongly the target depends on a feature. ON TRAIN SET
+##### Univariate feature selection: measure how strongly the target depends on a feature. ON TRAIN SET
 // Use feature_selection.SelectKBest --> returns the K best features given some scoring function. Ex: F-value (f_classif) measures the linear dependency between the feature variable and the target. This means the score might underestimate the relation between a feature and the target if the relationship is nonlinear
 
 from sklearn.feature_selection import SelectKBest, f_classif
@@ -209,7 +207,7 @@ selector = SelectKBest(f_classif, k=5)  # Keep 5 features and use F-value
 X_new = selector.fit_transform(train[feature_cols], train['target'])  # ONLY ON TRAIN SET
 // At this stage, we have an array with 5 features but it's not clear which ones we've kept. So we need to inverse_transform
 
-# L1 regularization (Lasso)
+#### L1 regularization (Lasso)
 from sklearn.linear_model import LogisticRegression (classification), Lasso (regression pb)
 from sklearn.feature_selection import SelectFromModel
 X, y = train[train.columns.drop("target")], train['target']
@@ -217,11 +215,11 @@ logistic = LogisticRegression(C=1, penalty="l1", random_state=7).fit(X, y)  # Se
 model = SelectFromModel(logistic, prefit=True)
 X_new = model.transform(X)
 
-# Get back the features we've kept and set zero for all other features
+##### Get back the features we've kept and set zero for all other features
 selected_features = pd.DataFrame(selector/model.inverse_transform(X_new), 
                                  index=train.index, 
                                  columns=feature_cols)
-# Dropped columns have values of all 0s, so var is 0, drop them
+##### Dropped columns have values of all 0s, so var is 0, drop them
 selected_columns = selected_features.columns[selected_features.var() != 0]
 
 --> Function for Lasso: to give the selected features
