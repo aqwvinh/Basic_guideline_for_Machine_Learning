@@ -122,21 +122,21 @@ class NumericalTransformer(BaseEstimator, TransformerMixin):
 ## COMBINE PIPELINES
 
 #Categrical features to pass down the categorical pipeline 
-cateforical_features = ['date', 'waterfront', 'view', 'yr_renovated']
+cat_features = ['date', 'waterfront', 'view', 'yr_renovated']
 
 #Numerical features to pass down the numerical pipeline 
-numerical_features = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors',
+num_features = ['bedrooms', 'bathrooms', 'sqft_living', 'sqft_lot', 'floors',
                 'condition', 'grade', 'sqft_basement', 'yr_built']
 
 #Defining the steps in the categorical pipeline 
-categorical_pipeline = Pipeline( steps = [ ( 'cat_selector', FeatureSelector(categorical_features) ),  #FeatureSelector is the first transformer we created
+categorical_pipeline = Pipeline( steps = [ ( 'cat_selector', FeatureSelector(cat_features) ),  #FeatureSelector is the first transformer we created
                                   
                                   ( 'cat_transformer', CategoricalTransformer() ), 
                                   
                                   ( 'one_hot_encoder', OneHotEncoder( sparse = False ) ) ] ) #We can do MV imputation too
     
 #Defining the steps in the numerical pipeline     
-numerical_pipeline = Pipeline( steps = [ ( 'num_selector', FeatureSelector(numerical_features) ),
+numerical_pipeline = Pipeline( steps = [ ( 'num_selector', FeatureSelector(num_features) ),
                                   
                                   ( 'num_transformer', NumericalTransformer() ),
                                   
