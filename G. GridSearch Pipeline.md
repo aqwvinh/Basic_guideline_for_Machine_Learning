@@ -125,7 +125,7 @@ scorer = make_scorer(f2_score, greater_is_better=True)
 ```
 
 ### Apply the GridSearch
-
+```
 for grid in grids:
   # Defining the steps in the categorical pipeline
   categorical_pipeline = Pipeline(steps=[('cat_selector', CategoricalSelector()),
