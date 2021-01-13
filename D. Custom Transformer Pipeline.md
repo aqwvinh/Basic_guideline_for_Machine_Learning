@@ -173,4 +173,9 @@ final_pipeline.fit( X_train, y_train )
 #Can predict with it like any other pipeline
 y_pred = final_pipeline.predict( X_test ) 
 
+# Evaluation test
+from sklearn.metrics import mean_squared_error
+rmse = mean_squared_error(y_test, y_pred, squared=False)
+rmse
+
 ```
