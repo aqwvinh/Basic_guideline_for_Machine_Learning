@@ -8,9 +8,11 @@ Tips:
 
 
 ## Pipeline example
+'''
 import numpy as np 
 import pandas as pd
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import FeatureUnion, Pipeline
+'''
