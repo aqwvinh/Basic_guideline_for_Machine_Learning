@@ -1,4 +1,6 @@
-Typical steps and tips for features engineering (not comprehensive)
+# Feature Engineering
+
+## Typical steps and tips for features engineering (not comprehensive)
 - Check variables type : numerical (discrete/continuous), categorical (ordinal/nominal), date and mixed variables (numbers and labels in the same observation like car numberplate or in ≠ observations)
 - Check MV (understand the mechanisms - MCAR/MNAR/MAR - to choose the right imputation technique - mean/median/mode/arbitrary/frequent/indicator/random/knn etc)
 - Check cardinality (high cardinaly may cause overfitting and operationalisation problems)
@@ -22,7 +24,8 @@ TIPS
 
 
 
-PIPELINE EXAMPLE USING FEATURE-ENGIN LIBRARY
+## Pipeline example using feature-engine library
+```
 # for feature engineering
 from sklearn.preprocessing import StandardScaler
 from feature_engine import missing_data_imputers as mdi
@@ -95,7 +98,7 @@ importance = pd.Series(np.abs(house_pipe.named_steps['lasso'].coef_))
 importance.index = list(final_columns)+['LotFrontage_na', 'MasVnrArea_na',  'GarageYrBlt_na']
 importance.sort_values(inplace=True, ascending=False)
 importance.plot.bar(figsize=(18,6))
-
+```
 
 
 
