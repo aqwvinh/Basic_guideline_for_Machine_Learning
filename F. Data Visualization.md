@@ -17,7 +17,7 @@ plt.title("Daily Global Streams of Popular Songs in 2017-2018")
 sns.lineplot(data=spotify_data)
 ```
 
-2. Bar chart
+# 2. Bar chart
 ```
 # Set the width and height of the figure
 plt.figure(figsize=(10,6))
@@ -29,12 +29,12 @@ sns.barplot(x=flight_data.index, y=flight_data['target'])
 plt.ylabel("Arrival delay (in minutes)")
 ```
 
-3. Heat map
+# 3. Heat map
 ```
 sns.heatmap(data=flight_data, annot=True)
 ```
 
-4. Scatter plots
+# 4. Scatter plots
 ```
 sns.scatterplot(x=df['col_x'], y=df['col_y'])
 
@@ -45,7 +45,7 @@ sns.regplot(x=df['col_x'], y=df['col_y'])
 sns.scatterplot(x=insurance_data['bmi'], y=insurance_data['charges'], hue=insurance_data['smoker'])
 ```
 
-5. Histogram 
+# 5. Histogram 
 ```
 sns.distplot(a=df['col'], kde=False)
 
@@ -59,9 +59,10 @@ plt.title("Histogram of Petal Lengths, by Species")
 plt.legend()
 ```
 
-6. Bonus from FUll Guideline
+# 6. Bonus from FUll Guideline
+
+## 6.A Gmaps
 ```
-# Gmaps
 gmaps.configure(api_key='YourAPI')
 fig = gmaps.figure()
 heatmap_layer_inside = gmaps.heatmap_layer(
@@ -70,8 +71,10 @@ heatmap_layer_inside = gmaps.heatmap_layer(
 )
 fig.add_layer(heatmap_layer_inside)
 fig
+```
 
-# DOUBLE LINE GRAPH
+## 6.B DOUBLE LINE GRAPH
+```
 ax = df.plot(x = 'month', y= ['Y1', 'Y2'], figsize = (25,10), title = 'yourTitle')
 _ = plt.xticks(fontsize = 16, rotation=45) # tip for changing the ticks
 
@@ -116,8 +119,10 @@ ax3 = sns.lineplot(x=range(0,len(df_plot.Y3)), y='Y3', data=df_plot, sort=False,
 ax1.yaxis.set_major_formatter(FormatStrFormatter('%.2f'))
 #show plot
 plt.show()
+```
 
-# PIE CHART
+## 6.C PIE CHART
+```
 labels = df.country_name
 sizes = df.ratio
 fig1, ax1 = plt.subplots()
