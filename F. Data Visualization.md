@@ -28,6 +28,14 @@ sns.barplot(x=flight_data.index, y=flight_data['target'])
 # Add label for vertical axis
 plt.ylabel("Arrival delay (in minutes)")
 ```
+Tips : Plot value_counts() by sorting by index and important to add titles !
+```
+ax = df['beds'].value_counts().sort_index().plot.bar()
+ax.set_xlabel("Number of beds", fontsize=16)
+ax.set_ylabel("Number of occurences", fontsize=16)
+ax.set_title("Number of listings per number of beds", fontsize=18)
+ax.tick_params(axis='both', which='major', labelsize=14)  # To augment the font size
+```
 
 # 3. Heat map
 ```
@@ -43,6 +51,10 @@ sns.regplot(x=df['col_x'], y=df['col_y'])
 
 # Relation with a third binary variable (color the points)
 sns.scatterplot(x=insurance_data['bmi'], y=insurance_data['charges'], hue=insurance_data['smoker'])
+```
+Alternative for scatter points (nuage de points)
+```
+sns.jointplot(x='beds', y='bedrooms', data=listings)
 ```
 
 # 5. Histogram 
@@ -130,4 +142,17 @@ ax1.pie(sizes, labels=labels, autopct='%1.1f%%',
         shadow=True, startangle=90)
 ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
 plt.show()
+```
+
+# 7. Boxplot
+Useful to show the distribution and detect outliers using IQR
+```
+sns.boxplot(x='room_type', y='accommodates', data=df)
+# Detect outliers using IQR
+Q1 = df['target'].quantile(0.25)
+Q3 = df['target'].quantile(0.75)
+IQR = Q3 - Q1
+print(IQR)
+df['target'] < (Q1 - 1.5 * IQR)  #lower bound
+df['target'] > (Q3 + 1.5 * IQR) #upper bound
 ```
