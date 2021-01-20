@@ -123,6 +123,9 @@ housing['region'] = np.select(conditions, values)
 # Extract first n characters from left of columns in pandas
 df['zipcode'].str[:5]
 
+# Keep only rows whose strings startwiths '75'
+df_paris = df.loc[df.zipcode.str.startswith('75', na=False)]
+
 # Set max value in a column to 30
 maxVal = 30
 df['col'] = df['col'].where(df['col'] <= maxVal, maxVal)
