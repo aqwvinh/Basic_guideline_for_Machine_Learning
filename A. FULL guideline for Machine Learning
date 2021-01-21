@@ -182,7 +182,11 @@ def split_amenities(amenities):
     
 listings['amenities'] = listings['amenities'].apply(split_amenities)
 
-
+# Convert date to day of week name
+df['date'] = pd.to_datetime(df['date'])
+df['weekday'] = df['date'].dt.weekday
+dayOfWeek={0:'Monday', 1:'Tuesday', 2:'Wednesday', 3:'Thursday', 4:'Friday', 5:'Saturday', 6:'Sunday'}
+df['weekday_name'] = df['weekday'].map(dayOfWeek)
 
 ### MISSING VALUES
 # Print only the columns with missing values and their corresponding %
