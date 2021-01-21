@@ -187,6 +187,14 @@ df['date'] = pd.to_datetime(df['date'])
 df['weekday'] = df['date'].dt.weekday
 df['weekday_name'] = df['date'].dt.day_name()
 df['isWE'] = np.where((df.weekday == 4)|(df.weekday == 5), 1,0)
+# Separate weekdays and weekend days
+df_week = df[df.isWE == 0]
+df_weekend = df[df.isWE == 1]
+# Check if we didn't have data leakage
+assert df_week.shape[0] + df_weekend.shape[0] == df.shape[0] # Use assert to check if we don't have any error
+
+
+
 
 ### MISSING VALUES
 # Print only the columns with missing values and their corresponding %
