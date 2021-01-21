@@ -182,10 +182,11 @@ def split_amenities(amenities):
     
 listings['amenities'] = listings['amenities'].apply(split_amenities)
 
-# Convert date to day of week name
+# Convert date to day of week name and add isWE
 df['date'] = pd.to_datetime(df['date'])
 df['weekday'] = df['date'].dt.weekday
 df['weekday_name'] = df['date'].dt.day_name()
+df['isWE'] = np.where((df.weekday == 4)|(df.weekday == 5), 1,0)
 
 ### MISSING VALUES
 # Print only the columns with missing values and their corresponding %
