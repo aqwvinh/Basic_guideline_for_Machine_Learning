@@ -171,6 +171,17 @@ new_amenities = new_amenities.loc[new_amenities.title.isin(selected_amenities)] 
 
 # Check amenities distribution (multiple items per row that are separated by ",")
 pd.Series(np.concatenate(listings['amenities'].map(lambda x: x.split(",")))).value_counts()
+# If multiple items are separated by other characters, we can create a cleaning function and use it with apply
+def split_amenities(amenities):
+    amenity_list = amenities \
+        .replace("\"", "")  \
+        .replace("{", "")  \
+        .replace("}", "")  \
+        .lower().split(",")
+    return amenity_list
+    
+listings['amenities'] = listings['amenities'].apply(split_amenities)
+
 
 
 ### MISSING VALUES
