@@ -52,6 +52,8 @@ house_pipe = Pipeline([
         variables=['LotFrontage', 'MasVnrArea',  'GarageYrBlt'])),
     ('imputer_num', mdi.MeanMedianImputer(imputation_method='median',  # replace MV by the median
                                           variables=['LotFrontage', 'MasVnrArea',  'GarageYrBlt'])),
+    ('0_imputer', mdi.ArbitraryNumberImputer(arbitrary_number = 0,
+                                             variables = ['platform_fees', 'cleaning_fees'])),                                          
     ('imputer_cat', mdi.CategoricalVariableImputer(variables=categorical)),  # add string 'missing' to all cat var with MV
 
     # categorical encoding
