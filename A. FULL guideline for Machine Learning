@@ -521,6 +521,7 @@ X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test
 
 TIPS : 
 CROSS-VALIDATION ON THE TRAIN SET TO AVOID OVERFITTING
+Cross-validation is used to know if the model overfits. So once you're satisfied with the result, you need to FIT and PREDICT for new predictions
 For small dataset (<100K rows is a small dataset) => cross-validation
 How choose K ? Value of K shouldn’t be too small or too high, ideally 5 to 10 depending on the data size. 
          The higher value of K leads to less biased model (but large variance might lead to over-fit)
@@ -547,6 +548,8 @@ model = svm.SVR(kernel='linear', C=1, random_state=42)
 scores = cross_val_score(model, X_train, y_train, cv=5, scoring = "neg_root_mean_squared_error") ==> "scores" gives an array with the multiple scores
 # Give the mean score
 print(f" {round(scores.mean(),2)} score with a standard deviation of {round(scores.std(),2)}"
+
+# Then FIT and PREDICT
 
 
 
