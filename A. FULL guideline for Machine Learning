@@ -519,6 +519,18 @@ CROSS-VALIDATION ON THE TRAIN SET
 For small dataset (<100K rows is a small dataset) => cross-validation
 How choose K ? Value of K shouldn’t be too small or too high, ideally 5 to 10 depending on the data size. 
          The higher value of K leads to less biased model (but large variance might lead to over-fit)
+         
+REGRESSION METRICS:
+3 main possibilities: R2, (R)MSE and MAE. 
+ - R2 = how well the model fits the dependent variables. Not good for overfitting consideration. Solution: adjusted R2
+ - RMSE = how far is your prediction. Use RMSE and not MSE cuz in the same unit than the observations
+ - MAE = Similar but take the absolute error vs square error for RMSE. RMSE gives larger penalisation to big prediction errors vs MAE treats them equally
+Conclusion, better to use RMSE to compare models and if you want to penalize more larger prediction errors
+Code using sklearn:
+from sklearn.metrics import mean_squared_error
+import math
+print(math.sqrt(mean_squared_error(y_test, y_pred)))
+
                
 from sklearn.model_selection import cross_val_score
 from sklearn import metrics  --> See list of metrics here : https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
