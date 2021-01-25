@@ -9,7 +9,7 @@ pickle.dump(model, open(filename, 'wb'))
 Then later, load the model
 ```
 # load the model from disk
-loaded_model = joblib.load(filename)
+loaded_model = pickle.load(open(filename, 'rb'))
 result = loaded_model.score(X_valid, y_valid)
-print(result)
+print(f"Test result: {round(result*100,2)} %")
 ```
