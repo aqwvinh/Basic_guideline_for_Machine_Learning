@@ -203,6 +203,7 @@ total_miss = df_mv.isnull().sum().sort_values(ascending=False)
 percent_miss = (df_mv.isnull().sum()/df_mv.isnull().count()).sort_values(ascending=False)
 missing_data = pd.concat([total_miss, percent_miss], axis=1, keys=['Total_miss', 'Percent_miss'])
 missing_data[missing_data.Percent_miss > 0]
+
 THEN
 mv_features = ['tax', 'fees']
 for f in mv_features:
@@ -214,12 +215,6 @@ c1 = (listings.accommodates > 1)
 c2 = (listings.accommodates <= 1)
 listings.loc[c1,'beds'] = listings.loc[c1,'beds'].fillna(listings.loc[c1,'accommodates']/2)
 listings.loc[c2,'beds'] = listings.loc[c2,'beds'].fillna(1)
-
-# (Variante) Print only the columns with missing values
-missing_val_count_by_column = (df.isnull().sum())
-print(missing_val_count_by_column[missing_val_count_by_column > 0])  # Print only the columns with missing values
-# (Variante) Count the number of NaN per column. If we don't have so much features
-len(train) - train.count()
 
 # Get names of columns with missing values
 cols_with_missing = [col for col in train.columns
@@ -238,7 +233,6 @@ numerical_cols = [cname for cname in all_data.columns if
 # Replace by the mean (num) and the most frequent values (cat). For num, not always by the mean (median or 0)
 for feature in categorical_cols:
   all_data[feature] = all_data[feature].fillna(all_data[feature].dropna().mode()[0])
-
 for feature in numerical_cols:
   all_data[feature] = all_data[feature].fillna(all_data[feature].mean())
   
@@ -275,6 +269,8 @@ guess_ages = np.zeros((2,3))  # (2,3) cuz Sex is 2 and Pclass is 3
 
 # Drop na from specific column
 df = df.dropna(subset = ['colA'])
+
+
 
 # Replace date for specific row
 reservation.at[reservation.loc[reservation.code == 'resa_code'].index, 'departure_date']= pd.Timestamp('2019-12-31')
@@ -503,8 +499,17 @@ for feature in cat_features:
   all_data[feature] = enc.fit_transform(all_data[feature])   # Not the best way but i've to find better one. Not good to fit the encoder on test
 
 
+# Using Robust Scaler to transform X_train. Aim: scale features to be robust to outliers
+from sklearn.preprocessing import RobustScaler
+robust_scaler = RobustScaler()
+X_train_scaled = robust_scaler.fit_transform(X)
+X_test_scaled = robust_scaler.transform(test)
+
+
 
 GODD PRACTICE: USE A CLASS TRANSFORMER. ==> Define a class that does the data preprocessing on the train then on the test set
+
+
 
 
 
@@ -515,7 +520,7 @@ X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test
                                                    stratify=y) #random_state to have the same alea and strafify to have a balance in label
 
 TIPS : 
-CROSS-VALIDATION ON THE TRAIN SET 
+CROSS-VALIDATION ON THE TRAIN SET TO AVOID OVERFITTING
 For small dataset (<100K rows is a small dataset) => cross-validation
 How choose K ? Value of K shouldn’t be too small or too high, ideally 5 to 10 depending on the data size. 
          The higher value of K leads to less biased model (but large variance might lead to over-fit)
@@ -530,7 +535,11 @@ Code using sklearn:
 from sklearn.metrics import mean_squared_error
 print(np.sqrt(mean_squared_error(y_test, y_pred)))
 
-               
+
+## APPLY CROSS-VALIDATION
+# FYI: We do not need to call the fit method separately while using cross validation, 
+# the cross_val_score method fits the data itself while implementing the cross-validation on data
+
 from sklearn.model_selection import cross_val_score
 from sklearn import metrics  --> See list of metrics here : https://scikit-learn.org/stable/modules/model_evaluation.html#scoring-parameter
 # Example of 5-fold cross-validation with SVM Regressor
@@ -542,42 +551,12 @@ print(f" {round(scores.mean(),2)} score with a standard deviation of {round(scor
 
 
 
-# Summarize the X and y variables. Reminder: y_train can be normalized by the log function
-X = train.drop("label", axis = 1)
-y = train.label   # check if the target variable is normalized: y_train = np.log(y_train)
-X_test = test
-X.shape, y.shape, X_test.shape  # To check if the shapes are correct
-
-
-# Manually do the split. NOT best practice
-// train = 80% first rows, then valid = 10% and finally test = 10%. Order matters here
-def get_data_splits(df, valid_fraction=0.1):
-    valid_fraction = 0.1
-    df_srt = df.sort_values('click_time') # Wanna order depending on click_time. Delete if order doesn't matter
-    valid_rows = int(len(df_srt) * valid_fraction)
-    train = df_srt[:-valid_rows * 2]  # 80%
-    # valid size == test size, last two sections of the data
-    valid = df_srt[-valid_rows * 2:-valid_rows]  # 10%
-    test = df_srt[-valid_rows:]  # 10%
-    
-    return train, valid, test
-    
-// to call the function: 
-train, valid, test = get_data_splits(df)
-
-# Using Robust Scaler to transform X_train. Aim: scale features to be robust to outliers
-from sklearn.preprocessing import RobustScaler
-robust_scaler = RobustScaler()
-X_train_scaled = robust_scaler.fit_transform(X)
-X_test_scaled = robust_scaler.transform(test)
-
 # Creating the models. ADAPT ACCORDING THE TASK. HERE IS HOUSE PRICING PREDICTION
-models = [LinearRegression(), SVR(), SGDRegressor(), SGDRegressor(max_iter=1000, tol=1e-3), GradientBoostingRegressor(), RandomForestRegressor(),
-             Lasso(), Lasso(alpha=0.01, max_iter=10000), Ridge(), BayesianRidge(), KernelRidge(), KernelRidge(alpha=0.6, kernel='polynomial',degree=2, coef0=2.5),
-             ElasticNet(), ElasticNet(alpha=0.001, max_iter=10000), ExtraTreesRegressor()]
-names = ['Linear Regression','Support Vector Regression','Stochastic Gradient Descent','Stochastic Gradient Descent 2','Gradient Boosting Tree','Random Forest',
-         'Lasso Regression','Lasso Regression 2','Ridge Regression','Bayesian Ridge Regression','Kernel Ridge Regression','Kernel Ridge Regression 2',
-         'Elastic Net Regularization','Elastic Net Regularization 2','Extra Trees Regression']
+models = [LinearRegression(), SVR(), SGDRegressor(), GradientBoostingRegressor(), RandomForestRegressor(),
+             Lasso(), Ridge(), BayesianRidge(), KernelRidge(), ElasticNet(), ExtraTreesRegressor()]
+names = ['Linear Regression','Support Vector Regression','Stochastic Gradient Descent','Gradient Boosting Tree','Random Forest',
+         'Lasso Regression','Ridge Regression','Bayesian Ridge Regression','Kernel Ridge Regression',
+         'Elastic Net Regularization','Extra Trees Regression']
 
 # Define a root mean square error function using cross-validation
 from sklearn.model_selection import KFold, cross_val_score
@@ -625,6 +604,8 @@ def train_model(classifier, train_vector, train_labels, valid_vector, valid_labe
 from sklearn import linear_model
 accuracy = train_model(linear_model.LogisticRegression(random_state=0, penalty = "l2", solver='newton-cg', max_iter =200, C=1.6), X_train, y_train, X_valid, y_valid)
 print ("LR : ", accuracy) 
+
+
 
 ### Tuning hyperparameters
 # Gridsearch for log reg
