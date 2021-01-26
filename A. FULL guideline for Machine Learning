@@ -613,7 +613,6 @@ print ("LR : ", accuracy)
 ### Tuning hyperparameters
 # Gridsearch for log reg
 from sklearn import model_selection
-import math
 param_grid = {'C': [0.1,1,10],
               'solver': ['newton-cg', 'saga', 'lbfgs']
               } 
@@ -621,7 +620,7 @@ param_grid = {'C': [0.1,1,10],
 clf = model_selection.GridSearchCV(linear_model.LogisticRegression(max_iter=300), param_grid = param_grid, scoring = "accuracy", cv = 5)
 clf.fit(X_train, y_train)
 print("The best parameters are: ",clf.best_params_)
-print("The best score achieved is: ",math.sqrt(-clf.best_score_))
+print("The best score achieved is: ",np.sqrt(-clf.best_score_))
 
 
 ### Final model
