@@ -240,8 +240,8 @@ for feature in numerical_cols:
 train['Age']=train['Age'].fillna(train['Age'].median() / "Unknown")
 
 # (Variante) Complete missing values by the most frequent occurence (letter or numerical category). Ex: frequent port of embarkation
-freq_port = train.Embarked.dropna().mode()[0]
-train["Embarked"] = train["Embarked"].fillna(freq_port)
+argmax = train.Embarked.value_counts().idxmax()
+train["Embarked"] = train["Embarked"].fillna(argmax)
 
 # (Variante) Complete missing values by using other correlated features instead of replacing by the mean of the missing variable
 # Guess Age values using median values for Age across sets of Pclass and Gender feature combinations
