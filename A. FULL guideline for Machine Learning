@@ -1,6 +1,13 @@
 PERSONAL TIPS THAT I MET DURING DS PROJECTS
 
 1)IMPORTATION
+FILE MANAGEMENT
+import os
+os.getcwd() #to get current working directory
+os.chdir(path) #change directory to another path
+
+
+
 # data analysis and wrangling
 import pandas as pd
 import numpy as np
