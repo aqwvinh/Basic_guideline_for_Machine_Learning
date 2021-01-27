@@ -243,6 +243,21 @@ train['Age']=train['Age'].fillna(train['Age'].median() / "Unknown")
 argmax = train.Embarked.value_counts().idxmax()
 train["Embarked"] = train["Embarked"].fillna(argmax)
 
+## Create a function that fills MV for beds with the most frequent value for beds in observations with the same value of bedrooms and bathrooms
+# First, keep the rows that have NA for beds and not NA for bedrooms and bathrooms
+df_beds_na = df[(df.beds.isna()) & (~df.bedrooms.isna()) & (~df.bathrooms.isna())]
+# Create the function
+def fill_beds(row):
+    df_filtered = df[(df.bedrooms == row.bedrooms) & (df.bathrooms == row.bathrooms)]
+    argmax = df_filtered.beds.value_counts().idxmax()
+    row['beds'] = argmax
+    return row
+# Apply the function
+df_beds_na_for_merge = df_beds_na.apply(fill_beds, axis = 1). # don't forget axis = 1
+
+    
+    
+
 # (Variante) Complete missing values by using other correlated features instead of replacing by the mean of the missing variable
 # Guess Age values using median values for Age across sets of Pclass and Gender feature combinations
 guess_ages = np.zeros((2,3))  # (2,3) cuz Sex is 2 and Pclass is 3
