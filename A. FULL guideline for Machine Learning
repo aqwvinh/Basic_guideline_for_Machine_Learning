@@ -630,7 +630,9 @@ from sklearn import linear_model
 accuracy = train_model(linear_model.LogisticRegression(random_state=0, penalty = "l2", solver='newton-cg', max_iter =200, C=1.6), X_train, y_train, X_valid, y_valid)
 print ("LR : ", accuracy) 
 
-
+# coeff interpretation (for linear model)
+regr_coef = pd.DataFrame(data=np.asarray([X.columns, model.coef_]).transpose(), columns=["variable", "coef"])
+regr_coef.sort_values(by='coef',ascending=False)
 
 ### Tuning hyperparameters
 # Gridsearch for log reg
