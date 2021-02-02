@@ -216,12 +216,24 @@ mv_features = ['tax', 'fees']
 for f in mv_features:
     reservation2[f] = reservation2[f].fillna(0)
     
+# Replace MV for one col depending on another column. Here replace MV "beds" by the most frequent value for beds in observations with the same value of bedrooms and bathrooms 
+df_na = listings[(listings.beds.isna()) & (~listings.bedrooms.isna()) & (~listings.bathrooms.isna())]
+def fill_beds(row):
+    df_filtered = listings[(listings.bedrooms == row.bedrooms) & (listings.bathrooms == row.bathrooms)]
+    argmax = df_filtered['beds'].value_counts().idxmax(). # argmax is the most frequent value for beds per subgroup
+    row['beds'] = argmax
+    return row
+
+listings_imputed = df_na.apply(fill_beds, axis = 1)
+listings.beds = listings.beds.fillna(listings_imputed.beds)
+
     
-# Replace MV for one col depending on another column. Here replace MV "beds" by "accomodates"/2 if > 1 else 1
+# (Variante) Replace MV for one col depending on another column. Here replace MV "beds" by "accomodates"/2 if > 1 else 1
 c1 = (listings.accommodates > 1)
 c2 = (listings.accommodates <= 1)
 listings.loc[c1,'beds'] = listings.loc[c1,'beds'].fillna(listings.loc[c1,'accommodates']/2)
 listings.loc[c2,'beds'] = listings.loc[c2,'beds'].fillna(1)
+
 
 # Get names of columns with missing values
 cols_with_missing = [col for col in train.columns
