@@ -483,6 +483,10 @@ BEST PRACTICE : MANUALLY ENCODE WHEN ORDER MATTERS AND ONE-HOT ENCODE WHEN NO HI
 # Manual encoding
 housing.id = np.where(housing.id > 0, 1, 0)
 
+# Binary encoding
+df['instant_bookable'] = 1 * (df['instant_bookable'] == "t") ==> t/f is 1/0 so *1 converts into numeric format
+
+
 # Converting numeric features to categorical features. Especially for the year or month --> need to create categories
 from sklearn.preprocessing import LabelEncoder
 str_cols = ['YrSold','YearRemodAdd','YearBuilt','MoSold','MSSubClass']
