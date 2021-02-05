@@ -349,6 +349,12 @@ dataset.loc[(dataset['Age'] > 48) & (dataset['Age'] <= 64), 'Age'] = 3
 dataset.loc[ dataset['Age'] > 64, 'Age'] = 4
 
 
+# Show rows only if values is in a list. Use isin() for string and number
+doublon_list = [0, 999]
+housing[housing.housing_id.isin(doublon_list) ][['housing_id', 'housing_name']]
+
+
+
 ### Creation of new feature. Some ideas
 # TITANIC. Create another feature called IsAlone. Reminder: combine = [train, test]
 for dataset in combine:
