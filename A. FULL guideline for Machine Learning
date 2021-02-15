@@ -111,6 +111,9 @@ y_name = 'arnd'
 y = df.pop(y_name)
 df.insert(1, y_name, y). # Put at 2nd column
 
+# Find elements not in a list
+set(update_df.housing_id) - set(start_df.housing_id) # gives IDs from update_df that are not in start_df
+
 
 3) DATA PREPROCESSING
 To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
