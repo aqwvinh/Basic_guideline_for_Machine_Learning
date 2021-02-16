@@ -204,6 +204,14 @@ df_weekend = df[df.isWE == 1]
 assert df_week.shape[0] + df_weekend.shape[0] == df.shape[0] # Use assert to check if we don't have any error
 
 
+## USING TRY EXCEPTION TO HANDLE EXCEPTION
+# Function to convert format, if error (ParserError from pendulum lib), set specific date
+def convert_date_format(x):
+    try:
+        return maya.parse(x).datetime(to_timezone='Europe/Paris', naive=False).date()  #Do something if no error
+    except pendulum.parsing.exceptions.ParserError:
+        return '2000-01-01'.                                                           #Do something else if error
+housing['first_booking'] = housing['first_booking'].apply(convert_date_format)
 
 
 ### MISSING VALUES
