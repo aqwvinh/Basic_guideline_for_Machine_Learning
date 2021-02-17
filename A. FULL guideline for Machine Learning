@@ -245,6 +245,12 @@ c2 = (listings.accommodates <= 1)
 listings.loc[c1,'beds'] = listings.loc[c1,'beds'].fillna(listings.loc[c1,'accommodates']/2)
 listings.loc[c2,'beds'] = listings.loc[c2,'beds'].fillna(1)
 
+# (Variante) Replace MV by specific value in one col for rows that have a specific value
+id_list = [x1, x2]
+df.loc[df.c1.isin(id_list), 'occ_rate_year'] = 100
+
+
+
 
 # Get names of columns with missing values
 cols_with_missing = [col for col in train.columns
