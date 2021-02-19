@@ -752,8 +752,8 @@ bias_variance_decomp(
     X_test.values,
     y_test.values,
     loss="mse",
-    num_rounds=100
-)
+    num_rounds=100,
+    random_state = 94)
 
 
 
