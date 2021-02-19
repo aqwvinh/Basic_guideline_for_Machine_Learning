@@ -711,6 +711,24 @@ print(f'RMSE train: {round(np.sqrt(mean_squared_error(y_train, model.predict(X_t
 print(f'RMSE test: {round(np.sqrt(mean_squared_error(y_test, model.predict(X_test)),2)}')
 
 
+# Show bias_variance decomposition --> Show order is MSE, bias et variance
+# IMPORTANT: NOT ONLY EVALUATE MODEL ON PERFORMANCE METRICS BUT ALSO ON BIAIS-VARIANCE TRADEOFF (GOOD TO HAVE A LOW VAR WITHOUT SACRIFICE BIAS)
+# For the decomposition, we use mlxtend module to import bias_variance_decomp
+!pip install mlxtend -q
+from mlxtend.evaluate import bias_variance_decomp
+bias_variance_decomp(
+    model,
+    X_train.values,
+    y_train.values,
+    X_test.values,
+    y_test.values,
+    loss="mse",
+    num_rounds=100
+)
+
+
+
+
 # Save predictions in format used for competition scoring
 output = pd.DataFrame({'Id': X_test.index,
                        'Target': y_pred})
