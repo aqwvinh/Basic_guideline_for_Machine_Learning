@@ -214,6 +214,11 @@ def convert_date_format(x):
 housing['first_booking'] = housing['first_booking'].apply(convert_date_format)
 
 
+## Keep rows from a df according to a percentage. Here: keep the first 80% (already sort by OccRate) per year and per month
+df_80 = df.groupby(['year', 'month']).head(df['nb_rows_keep_per_month_80'])
+
+
+
 ### MISSING VALUES
 # Print only the columns with missing values and their corresponding %
 df_mv = reservation2
