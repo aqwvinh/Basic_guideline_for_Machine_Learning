@@ -581,8 +581,8 @@ GODD PRACTICE: USE A CLASS TRANSFORMER. ==> Define a class that does the data pr
 
 4) Modeling
 # split the dataset into training and validation datasets
-from sklearn import model_selection
-X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
+from sklearn.model_selection import train_test_split
+X_train, X_valid, y_train, y_valid = train_test_split(X, y, test_size=0.3, random_state=94,
                                                    stratify=y) #random_state to have the same alea and strafify to have a balance in label
 
 TIPS : 
