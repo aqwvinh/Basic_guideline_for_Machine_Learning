@@ -171,11 +171,26 @@ final_pipeline = Pipeline( steps = [ ( 'full_pipeline', full_pipeline),
 final_pipeline.fit( X_train, y_train )
 
 #Can predict with it like any other pipeline
-y_pred = final_pipeline.predict( X_test ) 
+y_pred_test = final_pipeline.predict( X_test ) 
 
 # Evaluation test
-from sklearn.metrics import mean_squared_error
-rmse = np.sqrt(mean_squared_error(y_test, y_pred))
-rmse
+rmse_test = np.sqrt(mean_squared_error(np.exp(y_test), np.exp(y_pred_test)))
+mae_test = mean_absolute_error(np.exp(y_test), np.exp(y_pred_test))
+r2_test = r2_score(np.exp(y_test), np.exp(y_pred_test))
+# Evaluation train
+rmse_train = np.sqrt(mean_squared_error(np.exp(y_train), np.exp(y_pred_train)))
+mae_train = mean_absolute_error(np.exp(y_train), np.exp(y_pred_train))
+r2_train = r2_score(np.exp(y_train), np.exp(y_pred_train))
+
+# Print test and train score to check overfitting
+print(f'MAE train: {round(mae_train, 2)}€')
+print(f'MAE test: {round(mae_test, 2)}€')
+print()
+print(f'RMSE train: {round(rmse_train, 2)}€')
+print(f'RMSE test: {round(rmse_test, 2)}€')
+print()
+print(f'R2 train: {round(r2_train, 2)*100}%')
+print(f'R2 test: {round(r2_test, 2)*100}%')
+
 
 ```
