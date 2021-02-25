@@ -1,4 +1,47 @@
 For small datasets. If the model is fast to run, it's probably worth switching to cross-validation.
+
+BEST SOLUTION: For loop to be able to fit_transform scaler on X_fold_train and transform on X_fold_test + advantage to be able to store multiple metrics
+from sklearn.model_selection import KFold
+# Set K
+kfold = KFold(n_splits=10)
+# To store train and test scores
+scores_train = []
+scores_test = []
+
+for train_I, test_I in kfold.split(X_encoded):    # X ou X_encoded depending on the encoding strategy. Possible to include encoding in the for loop using RareEncoding
+    # Get samples indices
+    X_fold_train = X_encoded.iloc[train_I, :]
+    y_fold_train = y_log.iloc[train_I]
+    X_fold_test = X_encoded.iloc[test_I, :]
+    y_fold_test = y_log.iloc[test_I]
+    
+    # Normalization
+    X_fold_train_scaled = minmaxscaler.fit_transform(X_fold_train)
+    X_fold_test_scaled = minmaxscaler.transform(X_fold_test)
+
+    # Model
+    rf = RandomForestRegressor()
+    rf.fit(X_fold_train_scaled, y_fold_train)
+    
+    # Calculate score of the model on X_fold_train and X_fold_test
+    scores_train.append(
+        r2_score(y_fold_train, rf.predict(X_fold_train))
+    )
+    scores_test.append(
+        r2_score(y_fold_test, rf.predict(X_fold_test))
+    )
+    # Show how it goes
+    if len(scores_train) % 5 == 0:
+        print("Fin de l'itération {} ...".format(len(scores_train)))
+        
+print("Fin de la validation croisée")
+
+
+
+
+
+
+(VARIANTE) Use cross_val_score to have only results directly. Less flexible
 Use a pipeline for cross-validation. 
 We define below a function get_score with argument n_estimators for the RF model
 
