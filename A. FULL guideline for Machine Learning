@@ -115,6 +115,11 @@ df.insert(1, y_name, y). # Put at 2nd column
 set(update_df.housing_id) - set(start_df.housing_id) # gives IDs from update_df that are not in start_df
 
 
+# Create custom dataframe
+data = [['jan', 1], ['feb', 2], ['mar', 3]] 
+df = pd.DataFrame(data, columns = ['date', 'values']) 
+
+
 3) DATA PREPROCESSING
 To do data pre-processing on both train and test sets. But WORK ON THE TRAIN FIRST THEN APPLY on TEST
 
