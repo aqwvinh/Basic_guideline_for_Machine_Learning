@@ -331,6 +331,10 @@ guess_ages = np.zeros((2,3))  # (2,3) cuz Sex is 2 and Pclass is 3
 # Drop na from specific column
 df = df.dropna(subset = ['colA'])
 
+# Groupby year and pivot table to have columns per year 
+df_evolution = df.groupby(['year', 'housing_name'])['revenu'].sum()
+df_evolution.year = df_evolution.year.astype(str)
+df_evolution_pivot = df_evolution.pivot(index='housing_name', columns='year', values='revenu')
 
 
 # Replace date for specific row
