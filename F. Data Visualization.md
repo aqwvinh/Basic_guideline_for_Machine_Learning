@@ -18,6 +18,17 @@ sns.lineplot(data=spotify_data)
 ```
 
 # 2. Bar chart
+Fast plot using value_counts()
+```
+# Visualize the wine quality distribution
+ax = wine.quality.value_counts().sort_index().plot(kind='bar')
+
+# C'est important de toujours mettre des titres et des noms d'axes
+ax.set_xlabel("Wine Quality", fontsize=16)
+ax.set_ylabel("Number", fontsize=16)
+ax.set_title("Nnumber of wine per quality", fontsize=18)
+ax.tick_params(axis='both', which='major', labelsize=14)  # Pour augmenter la taille de police des axes
+```
 ```
 # Set the width and height of the figure
 plt.figure(figsize=(10,6))
