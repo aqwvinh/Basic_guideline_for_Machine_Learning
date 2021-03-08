@@ -610,7 +610,7 @@ Code using sklearn:
 from sklearn.metrics import mean_squared_error
 print(np.sqrt(mean_squared_error(y_test, y_pred)))
 
-
+Steps: Gridsearch (optimization) on X_train and cross-validation on X !
 
 ## Blent.ai: evaluate model
 # Import regressor
@@ -645,6 +645,44 @@ for model, name in zip(models, names):
     print(f'RMSE train: {round(np.sqrt(mean_squared_error(np.exp(y_train), np.exp(y_pred_train))),2)}€')
     print(f'RMSE test: {round(np.sqrt(mean_squared_error(np.exp(y_test), np.exp(y_pred_test))),2)}€')
     print()
+
+# Optimization: GridSearchCV (for Gradient Boosting, do it by pairs). GridSearch on X_train
+from sklearn.model_selection import GridSearchCV
+
+grid_parameters = {
+    'max_depth': [3, 8, 12, 15],
+    'min_child_weight': [1, 3, 5, 7]}
+grid_cv = GridSearchCV(
+    estimator=XGBRegressor(**params),
+    param_grid=grid_parameters,
+    scoring="neg_mean_absolute_error",
+    cv=2,
+    verbose=1)
+# Lance la recherche par grille (peut prendre 5 minutes)
+grid_cv.fit(X_train, y_train)
+
+# Show results
+from matplotlib.ticker import PercentFormatter
+score_matrix = np.asarray(grid_cv.cv_results_["mean_test_score"]).reshape((4, 4))
+sns.set(font_scale=1.5)
+fig = plt.figure(figsize=(16, 12))
+plt.title("Scores MAE")
+ax = sns.heatmap(
+    score_matrix,  # Matrice des scores
+    annot=True,  # Afficher les scores
+    fmt='.02f',  # Affichage avec 1 chiffre après la virgule
+    yticklabels=grid_parameters["max_depth"],  # Nom de l'axe vertical
+    xticklabels=grid_parameters["min_child_weight"],  # Nom de l'axe horizontal
+    cmap="Blues",  # Palette de couleur
+)
+sns.set(font_scale=1)
+ax.set(ylabel="max_depth", xlabel="min_child_weight")
+plt.show()
+
+# summarize result
+print('Best Score: %s' % grid_cv.best_score_)
+print('Best Hyperparameters: %s' % grid_cv.best_params_)
+
 
 
 # Define a root mean square error function using cross-validation
