@@ -1,4 +1,5 @@
 For small datasets. If the model is fast to run, it's probably worth switching to cross-validation.
+Steps: Gridsearch (optimization) on X_train and cross-validation on X !
 
 BEST SOLUTION: For loop to be able to fit_transform scaler on X_fold_train and transform on X_fold_test + advantage to be able to store multiple metrics
 from sklearn.model_selection import KFold
