@@ -1,8 +1,9 @@
 For small datasets. If the model is fast to run, it's probably worth switching to cross-validation.
 Steps: Gridsearch (optimization) on X_train and cross-validation on X !
 
-BEST SOLUTION: For loop to be able to fit_transform scaler on X_fold_train and transform on X_fold_test + advantage to be able to store multiple metrics
-from sklearn.model_selection import KFold
+BEST SOLUTION: Do a for-loop to be able to fit_transform scaler on X_fold_train and transform on X_fold_test + advantage to be able to store multiple metrics
+
+from sklearn.model_selection import KFold, StratifiedKFold # to have class balance
 # Set K
 kfold = KFold(n_splits=10)
 # To store train and test scores
@@ -17,6 +18,7 @@ for train_I, test_I in kfold.split(X_encoded):    # X ou X_encoded depending on 
     y_fold_test = y_log.iloc[test_I]
     
     # Normalization
+    minmaxscaler = MinMaxScaler()
     X_fold_train_scaled = minmaxscaler.fit_transform(X_fold_train)
     X_fold_test_scaled = minmaxscaler.transform(X_fold_test)
 
@@ -24,13 +26,18 @@ for train_I, test_I in kfold.split(X_encoded):    # X ou X_encoded depending on 
     rf = RandomForestRegressor()
     rf.fit(X_fold_train_scaled, y_fold_train)
     
+    # Predict on train and test
+    y_fold_pred_train = model.predict(X_fold_train)
+    y_fold_pred_test = model.predict(X_fold_test)
+    
     # Calculate score of the model on X_fold_train and X_fold_test
     scores_train.append(
-        r2_score(y_fold_train, rf.predict(X_fold_train))
+        r2_score(y_fold_train, y_fold_pred_train)
     )
     scores_test.append(
-        r2_score(y_fold_test, rf.predict(X_fold_test))
+        r2_score(y_fold_test, y_fold_pred_test)
     )
+    
     # Show how it goes
     if len(scores_train) % 5 == 0:
         print("Fin de l'itération {} ...".format(len(scores_train)))
@@ -38,8 +45,10 @@ for train_I, test_I in kfold.split(X_encoded):    # X ou X_encoded depending on 
 print("Fin de la validation croisée")
 
 
-
-
+# Then Analyze mean and std (better to use standard deviation to describe the variability of the data + std is in the unit of the original variable)
+mean_score_test = np.mean(scores_test)
+std_score_test = np.std(scores_test)
+round(mean_score_test,2), round(std_score_test,2)
 
 
 (VARIANTE) Use cross_val_score to have only results directly. Less flexible
