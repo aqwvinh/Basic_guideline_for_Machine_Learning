@@ -5,12 +5,14 @@ BEST SOLUTION: Do a for-loop to be able to fit_transform scaler on X_fold_train 
 
 from sklearn.model_selection import KFold, StratifiedKFold # to have class balance
 # Set K
-kfold = KFold(n_splits=10)
+skf = StratifiedKFold(n_splits=10). # No more than 10 cuz we have to keep enough data for test
 # To store train and test scores
-scores_train = []
-scores_test = []
+r2_train_skf = []
+r2_test_skf = []
+mae_train_skf = []
+mae_test_skf = []
 
-for train_I, test_I in kfold.split(X_encoded):    # X ou X_encoded depending on the encoding strategy. Possible to include encoding in the for loop using RareEncoding
+for train_I, test_I in skf.split(X,y):    # X ou X_encoded depending on the encoding strategy. Possible to include encoding in the for loop using RareEncoding
     # Get samples indices
     X_fold_train = X_encoded.iloc[train_I, :]
     y_fold_train = y_log.iloc[train_I]
@@ -18,29 +20,36 @@ for train_I, test_I in kfold.split(X_encoded):    # X ou X_encoded depending on 
     y_fold_test = y_log.iloc[test_I]
     
     # Normalization
-    minmaxscaler = MinMaxScaler()
+    minmaxscaler = MinMaxScaler(). # Set new scaler for each fold
     X_fold_train_scaled = minmaxscaler.fit_transform(X_fold_train)
     X_fold_test_scaled = minmaxscaler.transform(X_fold_test)
 
     # Model
-    rf = RandomForestRegressor()
-    rf.fit(X_fold_train_scaled, y_fold_train)
+    model = XGBRegressor()
+    model.fit(X_fold_train_scaled, y_fold_train, eval_metric='mae', eval_set = [(X_fold_test_scaled, y_fold_test)],early_stopping_rounds=10) # XGBoost enables specify eval_metric
+                                                                                                            # eval_set for valid_test and early stopping 
     
     # Predict on train and test
-    y_fold_pred_train = model.predict(X_fold_train)
-    y_fold_pred_test = model.predict(X_fold_test)
+    y_fold_pred_train = model.predict(X_fold_train_scaled)
+    y_fold_pred_test = model.predict(X_fold_test_scaled)
     
     # Calculate score of the model on X_fold_train and X_fold_test
-    scores_train.append(
+    r2_train_skf.append(
         r2_score(y_fold_train, y_fold_pred_train)
     )
-    scores_test.append(
+    r2_test_skf.append(
         r2_score(y_fold_test, y_fold_pred_test)
+    )
+    mae_train_skf.append(
+        mean_absolute_error(y_fold_train, y_fold_pred_train)
+    )
+    mae_test_skf.append(
+        mean_absolute_error(y_fold_test, y_fold_pred_test)
     )
     
     # Show how it goes
-    if len(scores_train) % 5 == 0:
-        print("Fin de l'itération {} ...".format(len(scores_train)))
+    if len(r2_train_skf) % 5 == 0:
+        print("Fin de l'itération {} ...".format(len(r2_train_skf)))
         
 print("Fin de la validation croisée")
 
