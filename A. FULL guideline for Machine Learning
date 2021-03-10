@@ -338,7 +338,7 @@ df_evolution_pivot = df_evolution.pivot(index='housing_name', columns='year', va
 
 
 # Replace date for specific row
-reservation.at[reservation.loc[reservation.code == 'resa_code'].index, 'departure_date']= pd.Timestamp('2019-12-31')
+reservation.at[reservation.loc[reservation.code == 'resa_code'].index[0], 'departure_date']= pd.Timestamp('2019-12-31')
 
 # Take the date of the first resa 
 reservation['first_resa'] = reservation.groupby(['housing_id', 'housing_name'])['arrival_date'].transform("min") # Add column first_resa with the earliest resa per housing
