@@ -941,3 +941,8 @@ y_lgb_pred = np.exp(model_lgb.predict(X_test_scaled))
 # Average the predictions
 ensemble = y_avg_pred*0.70 + y_xgb_pred*0.15 + y_lgb_pred*0.15
 ensemble
+
+# Feature importance for Random Forest
+feature_imp = pd.DataFrame(model.feature_importances_, index=X_train.columns, columns=["importance"])
+feat_imp_20 = feature_imp.sort_values("importance", ascending=False).head(20)
+feat_imp_20
