@@ -75,12 +75,15 @@ plt.subplots(figsize=(12,9))
 sns.heatmap(corrmat, vmax=0.9, square=True)
 
 # Heatmap to check the features that contribute the most to the target variable
-k = 10 #number of variables for heatmap
-cols = corrmat.nlargest(k, 'Target')['Target'].index
-cm = np.corrcoef(train[cols].values.T)
+import seaborn as sns
+k = 25 #number of variables for heatmap
+cols = df.corr().nlargest(k, 'price')['price'].index
+cm = np.corrcoef(df[cols].values.T)
 sns.set(font_scale=1.25)
+fig, ax = plt.subplots(figsize=(12,12))        # Sample figsize in inches
 hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'size': 10}, yticklabels=cols.values, xticklabels=cols.values)
 plt.show()
+
 
 # Plot train Target distribution
 sns.countplot(df_train.target)
