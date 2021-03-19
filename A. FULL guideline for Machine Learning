@@ -226,6 +226,13 @@ housing['first_booking'] = housing['first_booking'].apply(convert_date_format)
 df_80 = df.groupby(['year', 'month']).head(df['nb_rows_keep_per_month_80'])
 
 
+## Create additional rows to have the same length for date
+prices = prices.set_index(['date', 'listing_id'])\
+                .unstack(fill_value=0)\
+                .asfreq('D', fill_value=0)\
+                .stack().sort_index(level=1).reset_index()
+
+
 
 ### MISSING VALUES
 # Print only the columns with missing values and their corresponding %
