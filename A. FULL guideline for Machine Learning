@@ -6,6 +6,9 @@ import os
 os.getcwd() #to get current working directory
 os.chdir(path) #change directory to another path
 
+# Go 3 levels up to get data file stores in another directory data
+dataset = pd.read_csv('../../../data/dataset.csv')
+
 
 
 # data analysis and wrangling
