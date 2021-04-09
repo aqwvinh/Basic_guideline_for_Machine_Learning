@@ -14,16 +14,29 @@ import pandas as pd
 from google.cloud import storage
 from io import BytesIO
 
-project_id = "your_project_id"
-bucket_name = "your_bucket_name"
-file_name = "your_file_name.csv"
+PROJECT_ID = "your_project_id"
+BUCKET_NAME = "your_bucket_name"
+FILE_NAME = "your_file_name.csv"
 
-client = storage.Client(project=project_id)
-bucket = client.get_bucket(bucket_name)
-blob = bucket.get_blob(file_name)
+client = storage.Client(project=PROJECT_ID)
+bucket = client.get_bucket(BUCKET_NAME)
+blob = bucket.get_blob(FILE_NAME)
 content = blob.download_as_string()
 df = pd.read_csv(BytesIO(content))
-df
+
+# Export csv from notebook to gcp bucket
+from google.cloud import storage
+
+def upload_to_bucket(bucket_name, blob_path, local_path):
+    bucket = storage.Client(project=PROJECT_ID).bucket(bucket_name)
+    blob = bucket.blob(blob_path)
+    blob.upload_from_filename(local_path)
+    return "Done!"
+# method call
+bucket_name = 'your_bucket_name' # do not give gs:// ,just bucket name
+blob_path = 'data_intermediate/df_merge.csv' # path where you want to store the file
+local_path = '../data/df_merge.csv' #local file path
+upload_to_bucket(bucket_name, blob_path, local_path)
 
 
 
