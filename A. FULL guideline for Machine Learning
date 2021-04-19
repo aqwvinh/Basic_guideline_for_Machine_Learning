@@ -38,6 +38,20 @@ blob_path = 'data_intermediate/df_merge.csv' # path where you want to store the 
 local_path = '../data/df_merge.csv' #local file path
 upload_to_bucket(bucket_name, blob_path, local_path)
 
+# Import and perform operations on multiple dataframes
+month_number = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
+df_dict = {m: pd.DataFrame() for m in month_number}
+
+for k in df_dict:
+    # Import multiple dataframes in one line of code
+    df_dict[k] = pd.read_csv('../../Datasets/inside_airbnb/calendar/2019/calendar_' + k + '.csv')
+    print(f'shape before filter for month {k} is {df_dict[k].shape}')
+    df_dict[k]['date'] = pd.to_datetime(df_dict[k]['date'])
+    df_dict[k] = df_dict[k][df_dict[k].date.dt.month == int(k)]
+    df_dict[k] = df_dict[k][(df_dict[k].minimum_nights <= 3) & (df_dict[k].maximum_nights >= 2)]
+    print(f'shape after filter for month {k} is {df_dict[k].shape}')
+    
+
 
 
 # data analysis and wrangling
