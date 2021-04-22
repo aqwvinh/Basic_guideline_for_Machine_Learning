@@ -480,7 +480,7 @@ IQR = Q3 - Q1
 print(IQR)
 df['target'] < (Q1 - 1.5 * IQR)  #lower bound
 df['target'] > (Q3 + 1.5 * IQR) #upper bound
-
+# 1.5 because of the scale. If we take 1 -> too much outliers, if 2 -> too few. With 1.5, we are the closest to the 3σ rule from the Gaussian (beyond 3σ -> outliers)
 
 
 
