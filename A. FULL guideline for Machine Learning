@@ -287,6 +287,9 @@ df['price_adjusted'] = df['price'].fillna(df.groupby(['listing_id', 'isWE'])['pr
 import math
 df['bathrooms_adjusted'] = df.bathrooms.apply(lambda x: math.ceil(x))
 
+## Create a dict from two lists
+output = dict(zip(keys_list, values_list))
+
 
 ### MISSING VALUES
 # Print only the columns with missing values and their corresponding %
