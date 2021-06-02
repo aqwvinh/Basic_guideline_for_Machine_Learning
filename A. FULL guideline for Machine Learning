@@ -52,6 +52,11 @@ for k in df_dict:
     print(f'shape after filter for month {k} is {df_dict[k].shape}')
     
 
+# Load a json file and convert it to pandas dataframe perserving tuples as values
+with open('path_to_your_json_file.json') as json_file:
+    dict_input = json.load(json_file)
+data = {k:[v] for k,v in zip(dict_input.keys(), dict_input.values())}
+df_input = pd.DataFrame(data)
 
 
 # data analysis and wrangling
