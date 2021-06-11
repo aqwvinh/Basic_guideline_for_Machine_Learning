@@ -1066,3 +1066,15 @@ ensemble
 feature_imp = pd.DataFrame(model.feature_importances_, index=X_train.columns, columns=["importance"])
 feat_imp_20 = feature_imp.sort_values("importance", ascending=False).head(20)
 feat_imp_20
+
+
+# Save output as pdf
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_pdf import PdfPages
+fig, ax =plt.subplots(figsize=(12,4))
+ax.axis('tight')
+ax.axis('off')
+the_table = ax.table(cellText=df.values,colLabels=df.columns,loc='center')
+pp = PdfPages("output.pdf")
+pp.savefig(fig, bbox_inches='tight')
+pp.close()
