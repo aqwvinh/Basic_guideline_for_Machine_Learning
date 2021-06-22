@@ -203,6 +203,9 @@ df_paris = df.loc[df.zipcode.str.startswith('75', na=False)]
 maxVal = 30
 df['col'] = df['col'].where(df['col'] <= maxVal, maxVal)
 
+# Use function map() to apply a function for every items in a list
+list_with_int = list(map(int, list_with_strings))
+
 
 # Select rows that contain a value in a specific column
 df[df['col'].str.contains("hello")]
