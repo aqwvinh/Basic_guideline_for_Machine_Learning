@@ -156,9 +156,10 @@ train = train.drop(train[(train[feature]>4000) & (train[target]<300000)].index) 
 g = sns.FacetGrid(train, col='y') # Initialize the FacetGrid with the data (train) and the target var
 g.map(plt.hist, 'X', bins=20) # Call plotting function .map with interval of 20 (for age for ex)
 
-# Groupby using different aggregation methods: mean and sum
+# Groupby using different aggregation methods: mean and sum and custom function (here keep the mode of the cluster feature)
 df_quartier = df.groupby(['region','quartier']).agg(revenue_brut_sum = ('revenue_brut_year', 'sum'),
-                                                    revenue_brut_night_mean = ('revenue_brut_moyen_night', 'mean')).reset_index()
+                                                    revenue_brut_night_mean = ('revenue_brut_moyen_night', 'mean'),
+                                                    cluster_mode = ('cluster', lambda x: x.value_counts().index[0])).reset_index()
 
 # Move specific col to specific place
 y_name = 'arnd'
