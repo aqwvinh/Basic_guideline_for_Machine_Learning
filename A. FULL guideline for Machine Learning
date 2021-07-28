@@ -233,6 +233,10 @@ df_train.loc[df_train['text'] == 'original text', 'target_relabeled'] = 0/1 #Cho
 # Create column with tuple. Useful for GPS using lat and lnt
 housing['GPS'] = tuple(zip(housing.lat, housing.lng))
 
+# Fix issues with too much spaces between words in a column
+df.date.map(lambda x: ' '.join(filter(None,x.split(' ')))) ==> first split using space, filter/remove None to have a list. Then join the remaining words in the list by a space
+
+
 # CALCULATE DISTANCE (haversine distance)
 pip install haversine # install module
 from haversine import haversine
