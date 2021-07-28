@@ -65,21 +65,56 @@ soup.find_all('p')
 
 ### Let's go back to the example
 <br>Now, find the division that contains the information you want. You can search by class, tag or id. Id is unique per page so, if it exists, easier
+<br>We can scrap multiple pages with a for loop
 ```
 # Prepare the dataframe
 titles=[] 
+categories=[]
+dates=[]
+places=[]
 descriptions=[] 
 
-list_events = soup.find(id='list_events') # from the object "soup", find the division with the id "list_events"
-events = list_events.find_all(class_='description') # fin all the "description" classes --> inspect the source code on the webpage and find the division and the architecture
-for a in events: # for each event/child
-    try:
-        title=a.find('a').get_text() # find tag "a" which refers to the tile
-        description = a.find('p').get_text() # find tag "p" which refers to the description
+# loop over all the pages (53 in total)
+pages = np.arange(1, 54, 1)
+
+for page in pages:
+    # Download the web page
+    page_web = requests.get("https://www.parisinfo.com/ou-sortir-a-paris/infos/rechercher-une-sortie?perPage=50&page=" + str(page))
+    soup = BeautifulSoup(page_web.content, 'html.parser')
+    # Get info we need
+    list_events = soup.find(class_='Result-content')
+    events_items = list_events.find_all('article',class_='Result Result--visitors')
+    # Store info in the list
+    for a in events_items:
+        try:
+            title=a.find(class_="Result-title-main").get_text()
+        except:
+            title=np.nan
+        try:
+            category=a.find(class_="Result-meta").get_text()
+        except:
+            category=np.nan
+        try:
+            date=a.find(class_="Result-date").get_text()
+        except:
+            date=np.nan
+        try:
+            place=a.find(class_="Result-place").get_text()
+        except:
+            place=np.nan
+        try:
+            description=a.find(class_="Result-intro").get_text()
+        except:
+            description=np.nan
+
+
         titles.append(title)
+        categories.append(category)
+        dates.append(date)
+        places.append(place)
         descriptions.append(description)
-    except:
-        print(title)
+    
+
 ```
 <br>Store the data in a dataframe and save it as .csv
 ```
