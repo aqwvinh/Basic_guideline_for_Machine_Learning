@@ -236,6 +236,12 @@ housing['GPS'] = tuple(zip(housing.lat, housing.lng))
 # Fix issues with too much spaces between words in a column
 df.date.map(lambda x: ' '.join(filter(None,x.split(' ')))) ==> first split using space, filter/remove None to have a list. Then join the remaining words in the list by a space
 
+# Use enumerate to create dictionary for creating dataframe
+map_admin = {k:v for k,v in enumerate(df_admin.admin_id.unique())} # enumerate renvoie l'index (0,1,2,3,etc) et l'associe à une valeur (admin_id)
+
+# Use dict.items() to have a list of a dictionary's tuple pairs (key:value)
+--> Useful for changing/mapping keys and values of a dict
+output = {map_admin[k]:list(map(lambda x: map_housings[x], v)) for k,v in dict_labelers.items()}
 
 # CALCULATE DISTANCE (haversine distance)
 pip install haversine # install module
