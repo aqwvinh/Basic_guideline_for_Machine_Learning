@@ -243,6 +243,16 @@ map_admin = {k:v for k,v in enumerate(df_admin.admin_id.unique())} # enumerate r
 --> Useful for changing/mapping keys and values of a dict
 output = {map_admin[k]:list(map(lambda x: map_housings[x], v)) for k,v in dict_labelers.items()}
 
+# Use sub_df in a for loop to create a dataframe. Need to do it when creating a df from dict with multiples values of different sizes per key
+for i,x in enumerate(dict.items()):   # reminder: enumerate gives iterable pairs of (index,value) and dict.items() gives pairs of (key,value)
+    sub_dict = dict([x]) # create sub_dict per x in the original dict
+    sub_df = pd.DataFrame(sub_dict)
+    if i==0:
+        df_final = sub_df.copy()
+    else:
+        df_final = pd.concat((df_final, sub_df))
+    
+
 # CALCULATE DISTANCE (haversine distance)
 pip install haversine # install module
 from haversine import haversine
