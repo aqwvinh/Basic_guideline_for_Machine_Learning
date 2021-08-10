@@ -251,6 +251,9 @@ for i,x in enumerate(dict.items()):   # reminder: enumerate gives iterable pairs
         df_final = sub_df.copy()
     else:
         df_final = pd.concat((df_final, sub_df))
+        
+# Select all columns starting the 4th column
+df.iloc[:,4:]
     
 
 # CALCULATE DISTANCE (haversine distance)
