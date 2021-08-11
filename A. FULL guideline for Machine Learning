@@ -177,6 +177,12 @@ val = [0, 1, 2]
 d = {k: [v] for k,v in zip(col,val)}
 df = pd.DataFrame(d)
 
+# Create dataframe using three lists
+df = pd.DataFrame({'lst1Tite' : [lst1],
+                                'lst2Tite' : [lst2],
+                                'lst3Tite' : [lst3] }, 
+                                columns=['lst1Tite','lst1Tite', 'lst1Tite'])
+
 
 
 3) DATA PREPROCESSING
