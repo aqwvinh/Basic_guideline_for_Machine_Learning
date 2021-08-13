@@ -260,8 +260,13 @@ for i,x in enumerate(dict.items()):   # reminder: enumerate gives iterable pairs
         
 # Select all columns starting the 4th column
 df.iloc[:,4:]
-    
 
+# Check if intersection of two lists is null
+L = [1,2,3,4,5]
+M = [5,6,7]
+bool(set(L) & set(M))
+
+    
 # CALCULATE DISTANCE (haversine distance)
 pip install haversine # install module
 from haversine import haversine
