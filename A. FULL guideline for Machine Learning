@@ -182,7 +182,9 @@ df = pd.DataFrame({'lst1Tite' : [lst1],
                                 'lst2Tite' : [lst2],
                                 'lst3Tite' : [lst3] }, 
                                 columns=['lst1Tite','lst1Tite', 'lst1Tite'])
-
+                                
+# Split a column of tuples
+df['a'], df['b'] = df.col.str
 
 
 3) DATA PREPROCESSING
