@@ -1,6 +1,6 @@
-# Basic quickstart for Deep Learning using PyTorch
+# Basic quickstart for Deep Learning using PyTorch (from official documentation: https://pytorch.org/)
 
-## Import libraries
+### Import libraries
 PyTorch has two primitives to work with data: torch.utils.data.DataLoader and torch.utils.data.Dataset. Dataset stores the samples and their corresponding labels, and DataLoader wraps an iterable around the Dataset.
 
 
@@ -177,5 +177,166 @@ with torch.no_grad():
     predicted, actual = classes[pred[0].argmax(0)], classes[y]
     print(f'Predicted: "{predicted}", Actual: "{actual}"')
 ```
+
+# Tensors
+
+### Initializing a Tensor
+ - Directly from data: 
+```
+data = [[1, 2],[3, 4]] 
+x_data = torch.tensor(data)
+```
+ - From a NumPy array
+```
+np_array = np.array(data)
+x_np = torch.from_numpy(np_array)
+```
+ - From another tensor
+
+Get a random number from a Tensor:
+```
+random_idx = torch.randint(low=0, high=10, size=(1,))    # size of randint() should be a tuple
+```
+
+### Operations on tensors
+By default, tensors are created on the CPU. We need to explicitly move tensors to the GPU using `.to` method (after checking for GPU availability). Keep in mind that copying large tensors across devices can be expensive in terms of time and memory!
+
+```
+# Get cpu or gpu device for training.
+device = "cuda" if torch.cuda.is_available() else "cpu"  # "cuda" for GPU, otherwise CPU
+tensor = tensor.to(device)
+```
+
+Join tensors using `torch.cat`to concatenatet a sequence of tensors. Alternative: `torch.stack`
+```
+t1 = torch.cat([tensor, tensor, tensor], dim=1)
+print(t1)
+```
+
+Single-element tensors 
+<br>If you have a one-element tensor, for example by aggregating all values of a tensor into one value, you can convert it to a Python numerical value using `item()`:
+```
+agg = tensor.sum()
+agg_item = agg.item()
+```
+
+
+# Datasets and Dataloaders
+PyTorch provides two data primitives: `torch.utils.data.DataLoader` and `torch.utils.data.Dataset` that allow you to use pre-loaded datasets as well as your own data. `Dataset` stores the samples and their corresponding labels, and `DataLoader` wraps an iterable around the Dataset to enable easy access to the samples.
+
+### Loading a Dataset
+We load the FashionMNIST Dataset with the following parameters:
+- `root` is the path where the train/test data is stored
+- `train` specifies training or test dataset (`True` or `False`)
+- `download=True` downloads the data from the internet if it’s not available at root
+- `transform` and `target_transform` specify the feature and label transformations
+
+### Iterating and Visualizing the Dataset
+We can index `Datasets` manually like a list: `training_data[index]`. We use `matplotlib` to visualize some samples in our training data.
+Don't forget that `training_data[index]` is a tuple with `(img,label) = training_data[index]` 
+
+```
+rand_idx = 4534
+img, label = training_data[rand_idx]
+label_title = labels_map[label]
+# plot figure
+plt.imshow(img.squeeze())
+plt.title(label_title)
+```
+
+```
+labels_map = {
+    0: "T-Shirt",
+    1: "Trouser",
+    2: "Pullover",
+    3: "Dress",
+    4: "Coat",
+    5: "Sandal",
+    6: "Shirt",
+    7: "Sneaker",
+    8: "Bag",
+    9: "Ankle Boot",
+}
+figure = plt.figure(figsize=(8, 8))
+cols, rows = 3, 3
+for i in range(1, cols * rows + 1):
+    sample_idx = torch.randint(len(training_data), size=(1,)).item()    # size takes a tuple
+    img, label = training_data[sample_idx]
+    figure.add_subplot(rows, cols, i)
+    plt.title(labels_map[label])
+    plt.axis("off")
+    plt.imshow(img.squeeze(), cmap="gray")  # need to squeeze the image
+plt.show()
+```
+
+### Preparing your data for training with DataLoaders
+The `Dataset` retrieves our dataset’s features and labels one sample at a time. While training a model, we typically want to pass samples in “minibatches”, reshuffle the data at every epoch to reduce model overfitting, and use Python’s `multiprocessing` to speed up data retrieval.
+`DataLoader` is an iterable that abstracts this complexity for us in an easy API.
+
+```
+from torch.utils.data import DataLoader
+batch_size = 64
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
+```
+
+### Iterate through the DataLoader
+We have loaded that dataset into the `DataLoader` and can iterate through the dataset as needed. Each iteration below returns a batch of `train_features` and `train_labels` (containing `batch_size=64` features and labels respectively). Because we specified `shuffle=True`, after we iterate over all batches the data is shuffled (for finer-grained control over the data loading order, take a look at Samplers).
+
+```
+# Display image and label
+train_features, train_labels = next(iter(train_dataloader))
+print(f"Feature batch shape: {train_features.size()}")
+print(f"Labels batch shape: {train_labels.size()}")
+img = train_features[0].squeeze()
+label = train_labels[0]
+plt.imshow(img, cmap="gray")
+plt.show()
+print(f"Label: {label}")
+```
+
+
+# Transforms
+We use transforms to perform some manipulation of the data and make it suitable for training.
+All TorchVision datasets have two parameters -`transform` to modify the features and `target_transform` to modify the labels
+
+The FashionMNIST features are in PIL Image format, and the labels are integers. For training, we need the features as normalized tensors, and the labels as one-hot encoded tensors. To make these transformations, we use `ToTensor` and `lambda` (lambda is used to transform a int label to one-hot Tensor
+
+```
+import torch
+from torchvision import datasets
+from torchvision.transforms import ToTensor, Lambda
+
+ds = datasets.FashionMNIST(
+    root="data",
+    train=True, # get training data
+    download=True,
+    transform=ToTensor(),   # ToTensor converts a PIL image or NumPy ndarray into a `FloatTensor` and scales the image’s pixel intensity values in the range [0., 1.]
+    target_transform=Lambda(lambda y: torch.zeros(10, dtype=torch.float).scatter_(dim=0, torch.tensor(y), value=1)) # transform int labels to one-hot encoded tensors. scatter_ assigns a value=1 on the index as given by the label y
+)                       
+```
+
+
+# Build the Neural Network
+The `torch.nn` namespace provides all the building blocks you need to build your own neural network. Every module in PyTorch subclasses the `nn.Module`. A neural network is a module itself that consists of other modules (layers). 
+
+```
+# import libraries
+import os
+import torch
+from torch import nn
+from torch.utils.data import DataLoader
+from torchvision import datasets, transforms
+# Get device for training: use hardware accelerator like the GPU
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'Using {device} device')
+```
+
+### Define the Class
+We define our neural network by subclassing `nn.Module`, and initialize the neural network layers in __init__. Every nn.Module subclass implements the operations on input data in the forward method.
+
+
+
+
 
 
