@@ -119,6 +119,14 @@ train.value_counts()  # To see the values distribution
 
 
 2) UNDERSTAND DATA
+
+# Some useful definitions
+List is a collection which is ordered and changeable (can add/remove items). Allows duplicate members.
+Tuple is a collection which is ordered and unchangeable (cannot add/remove items). Allows duplicate members.
+Set is a collection which is unordered and unindexed. No duplicate members.
+Dictionary is a collection which is ordered and changeable. No duplicate members.
+
+
 Select the most important features to check the outliers and to check multicorrelation (reduce nb of features)
 # Heatmap to see how features are correlated
 corrmat = train.corr()
