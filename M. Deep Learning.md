@@ -99,16 +99,16 @@ def train(dataloader, model, loss_fn, optimizer):
     model.train()
     for batch, (X, y) in enumerate(dataloader):
         X, y = X.to(device), y.to(device)  # Convert to GPU
+        # Reinitialize optimizer grad before running the backward pass because, by default, gradients are not overwritten when .backward() is called.
+        optimizer.zero_grad() 
 
         # Compute prediction error
         pred = model(X) # In the forward pass you’ll compute the predicted y by passing x to the model
         loss = loss_fn(pred, y) # After that, compute the loss
 
         # Backpropagation
-        optimizer.zero_grad() #Before running the backward pass, zero all the gradients for the variables that will be updated using the optimizer. 
-                               #This is done because, by default, gradients are not overwritten when .backward() is called
         loss.backward()
-        optimizer.step()       # Thereafter, call the step function on the optimizer, and this updates its parameters.
+        optimizer.step()       # step() updates the parameters
 
         if batch % 100 == 0:
             loss, current = loss.item(), batch * len(X)
