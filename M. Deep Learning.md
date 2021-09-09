@@ -40,8 +40,8 @@ We pass the `Dataset` as an argument to `DataLoader`. This wraps an iterable ove
 batch_size = 64
 
 # Create data loaders.
-train_dataloader = DataLoader(training_data, batch_size=batch_size)
-test_dataloader = DataLoader(test_data, batch_size=batch_size)
+train_dataloader = DataLoader(training_data, batch_size=batch_size, shuffle=True)
+test_dataloader = DataLoader(test_data, batch_size=batch_size, shuffle=True)
 
 for X, y in test_dataloader:
     print("Shape of X [N for batch size, C for channel, H for height, W for width]: ", X.shape)
@@ -54,6 +54,15 @@ NB: `next(iter(train_dataloader))` renvoie un tuple, avec les X par batch_size p
 
 ### Creating models
 To define a neural network in PyTorch, we create a class that inherits from `nn.Module`. We define the layers of the network in the `__init__` function and specify how data will pass through the network in the `forward` function. To accelerate operations in the neural network, we move it to the GPU if available.
+The size of the input is the size of the picture (here 28*28)
+The size of the output is the number of different classes (here 10 classes)
+`nn.Flatten`: We initialize the `nn.Flatten` layer to convert each 2D 28x28 image into a contiguous array of 784 pixel values ( the minibatch dimension (at dim=0) is maintained).
+`nn.Linear`: The `linear` layer is a module that applies a linear transformation on the input using its stored weights and biases.
+`nn.ReLu`: Non-linear activations are what create the complex mappings between the model’s inputs and outputs. They are applied after linear transformations to introduce nonlinearity, helping neural networks learn a wide variety of phenomena.
+
+
+
+
 
 ```
 # Get cpu or gpu device for training
@@ -300,7 +309,7 @@ print(f"Label: {label}")
 We use transforms to perform some manipulation of the data and make it suitable for training.
 All TorchVision datasets have two parameters -`transform` to modify the features and `target_transform` to modify the labels
 
-The FashionMNIST features are in PIL Image format, and the labels are integers. For training, we need the features as normalized tensors, and the labels as one-hot encoded tensors. To make these transformations, we use `ToTensor` and `lambda` (lambda is used to transform a int label to one-hot Tensor
+For instance, the FashionMNIST features are in PIL Image format, and the labels are integers. For training, we need the features as normalized tensors, and the labels as one-hot encoded tensors. To make these transformations, we use `ToTensor` and `lambda` (lambda is used to transform a int label to one-hot Tensor)
 
 ```
 import torch
@@ -333,10 +342,51 @@ print(f'Using {device} device')
 ```
 
 ### Define the Class
-We define our neural network by subclassing `nn.Module`, and initialize the neural network layers in __init__. Every nn.Module subclass implements the operations on input data in the forward method.
+We define our neural network by subclassing `nn.Module`, and initialize the neural network layers in __init__ (the architecture of the NN is in the __init__). Every `nn.Module` subclass implements the operations on input data in the `forward` method.
+
+```
+class NeuralNetwork(nn.Module):
+    def __init__(self):
+        super(NeuralNetwork, self).__init__()
+        self.flatten = nn.Flatten()
+        self.linear_relu_stack = nn.Sequential(
+            nn.Linear(28*28, 512), 
+            nn.ReLU(),
+            nn.Linear(512, 512),
+            nn.ReLU(),
+            nn.Linear(512, 10),
+        )
+
+    def forward(self, x):
+        x = self.flatten(x)
+        logits = self.linear_relu_stack(x)
+        return logits
+```
+
+Then, we create an instance of `NeuralNetwork`, and move it to the `device`, and print its structure.
+
+```
+model = NeuralNetwork().to(device)
+print(model)
+```
+
+Then, calling the model on the input returns a 10-dimensional tensor with raw predicted values for each class. We get the prediction probabilities by passing it through an instance of the `nn.Softmax module`.
+`nn.Softmax`: The last linear layer of the neural network returns logits - raw values in [-infty, infty] - which are passed to the nn.Softmax module. The logits are scaled to values [0, 1] representing the model’s predicted probabilities for each class. `dim` parameter indicates the dimension along which the values must sum to 1 (then apply argmax to find the class with the highest probability).
 
 
 
+```
+X = torch.rand(1, 28, 28, device=device)
+logits = model(X)
+pred_probab = nn.Softmax(dim=1)(logits)
+y_pred = pred_probab.argmax(1)
+print(f"Predicted class: {y_pred}")
+```
 
 
+# Automatic differentiation with `torch.autograd``
+
+When training neural networks, the most frequently used algorithm is back propagation. In this algorithm, parameters (model weights) are adjusted according to the gradient of the loss function with respect to the given parameter.
+
+To compute those gradients, PyTorch has a built-in differentiation engine called `torch.autograd`. It supports automatic computation of gradient for any computational graph.
 
