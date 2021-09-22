@@ -144,10 +144,16 @@ hm = sns.heatmap(cm, cbar=True, annot=True, square=True, fmt='.2f', annot_kws={'
 plt.show()
 
 
-# Plot train Target distribution
-sns.countplot(df_train.target)
+# Check feature distribution
+df = df_preprocessed_final
+target = 'surface'
+
+plt.figure(figsize=(10,5)) # Set figure size before calling plt.plot()
+df[f'{target}'].plot.hist(bins=60)
 plt.xlabel('Target')
 plt.title('Target distribution')
+
+
 
 # Spot outliers. Strategy: delete very bad outliers. not all outliers to have a model robust on outliers
 fig, ax = plt.subplots()
