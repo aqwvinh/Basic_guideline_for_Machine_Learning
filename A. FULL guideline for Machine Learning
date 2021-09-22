@@ -238,6 +238,10 @@ df_booking_moments['ratio'] = round(df_booking_moments.resa_count / df_booking_m
 # Select rows that contain a value in a specific column
 df[df['col'].str.contains("hello")]
 
+# Replace the value for one specific id (replace condition) by another chosen value
+df.loc[df['First Season'] > 1990, 'First Season'] = 1   # Need to select the column you want to change in the condition
+
+
 # Delete only true duplicates
 train = train.drop_duplicates("col", keep = "first")
 or PERSONALIZED 
