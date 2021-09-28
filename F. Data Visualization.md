@@ -167,3 +167,33 @@ print(IQR)
 df['target'] < (Q1 - 1.5 * IQR)  #lower bound
 df['target'] > (Q3 + 1.5 * IQR) #upper bound
 ```
+
+# 8. Line and scatter plot with condition
+Useful to show different colors depending on a condition
+```
+def plot_res(id, date_min, date_max):
+    
+    df['date'] = pd.to_datetime(df.date)
+    df_plot = df[(df.listing_id == id) & (df.date >= date_min) & (df.date < date_max)][['date', 'lead_time', 'label', 'price']]
+    df_plot = df_plot.sort_values(['date', 'lead_time', 'price'])
+    
+    dates = list(df_plot.date.values)
+    prices = list(df_plot.price.values)
+    
+    
+    fig, ax1 = plt.subplots(figsize=(20, 6))
+    ax2 = ax1.twinx()
+    
+    ax1.plot(dates, prices, lw=0.2, alpha=0.5)
+    ax1.scatter(df_plot[df_plot.label == 0].date, df_plot[df_plot.label == 0].price, c='lime', alpha=0.8, s=5)
+    ax1.scatter(df_plot[df_plot.label == 1].date, df_plot[df_plot.label == 1].price, c='red', alpha=0.8, s=5)
+    
+    ax2.plot(dates, df_plot.lead_time, c='black', lw=1, alpha=0.2)
+    
+    ax1.set_ylabel('price', color='black')
+    ax2.set_ylabel('lead time', color='black')
+    
+    plt.title(f'Price vs Leadtime for listing {id}')
+    
+    plt.show()
+```
