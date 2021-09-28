@@ -229,6 +229,12 @@ df['col'] = df['col'].where(df['col'] <= maxVal, maxVal)
 # Use function map() to apply a function for every items in a list
 list_with_int = list(map(int, list_with_strings))
 
+
+# VARIANTE to compute ratio per group (subtotal)
+sub_total = df.groupby('cluster')['count'].sum().reset_index().rename(columns={'count':'sub_total'})
+df = pd.merge(df, sub_total, on='cluster', how='left')
+df['ratio_per_group'] = round(df.count/df.sub_total, 2)*100
+
 # Compute subtotal (sub total) to have the ratio per group
 total_resa_year_region_sleeps = df_booking_moments.groupby(['year','region', 'sleeps_max_cat'])['resa_count'].transform('sum')
 df_booking_moments['sub_total'] = total_resa_year_region_sleeps
