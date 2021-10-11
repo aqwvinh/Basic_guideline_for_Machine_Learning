@@ -39,6 +39,11 @@ df = pd.concat([train,test])
 # Lowercase
 df['text']=df['text'].apply(lambda x : x.lower())  #import string if needed
 
+# Remove accent
+pip install unidecode
+import unidecode
+df['text'].apply(lambda x: unidecode.unidecode(x))
+
 # Remove URL
 import re
 def remove_URL(text):
@@ -51,6 +56,21 @@ df['text']=df['text'].apply(lambda x : remove_URL(x))
 def remove_html(text):
     html=re.compile(r'<.*?>')
     return html.sub(r'',text)
+
+# Remove multiple characters
+def multiple_replace(dict, text):
+  # Create a regular expression from the dictionary keys
+  regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
+
+  # For each match, look-up corresponding value in dictionary
+  return regex.sub(lambda x: dict[x.string[x.start():x.end()]], text) 
+text = "X is THE goal of Y"
+dict = {
+"X" : "Mandanda",
+"THE" : "the",
+"Y" : "Marseille",
+} 
+print(multiple_replace(dict, text))
 
 # Remove emoji
 def remove_emoji(text):
