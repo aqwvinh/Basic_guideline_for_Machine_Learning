@@ -247,6 +247,16 @@ df[df['col'].str.contains("hello")]
 # Replace the value for one specific id (replace condition) by another chosen value
 df.loc[df['First Season'] > 1990, 'First Season'] = 1   # Need to select the column you want to change in the condition
 
+# Convert a column and handle error. Here convert postal_code to int and return 999 if impossible to convert to int
+def convert_postal_code(x):
+    try:
+        res = int(x)
+        return res
+    except:
+        return int(999)
+    
+df.col = df.col.map(convert_postal_code)
+
 
 # Delete only true duplicates
 train = train.drop_duplicates("col", keep = "first")
