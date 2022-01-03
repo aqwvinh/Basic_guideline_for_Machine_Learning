@@ -59,6 +59,15 @@ data = {k:[v] for k,v in zip(dict_input.keys(), dict_input.values())}
 df_input = pd.DataFrame(data)
 
 
+# Read compressed csv and filter on rows
+iter_csv = pd.read_csv('test.csv.gz', usecols=cols_to_keep_listings, compression='gzip', na_values='\\N', iterator=True, chunksize=1000)
+listings = pd.concat([chunk[(chunk['data_type'] == 'ENTIRE_HOME') & 
+                      (chunk['data_address_city'] == 'Paris') &
+                      (chunk['data_subtype'].isin(['APARTMENT', 'HOTEL', 'OTHER', 'APARTHOTEL', 'BED_&_BREAKFAST'])) &
+                      (chunk['unifiedId'].isin(listings_ids))
+                     ] for chunk in iter_csv])
+
+
 # data analysis and wrangling
 import pandas as pd
 import numpy as np
