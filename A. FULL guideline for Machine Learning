@@ -1028,6 +1028,25 @@ scores = cross_val_score(model, X_train, y_train, cv=5, scoring = "neg_root_mean
 print(f" {round(scores.mean(),2)} score with a standard deviation of {round(scores.std(),2)}"
 
 
+# Predict by batch. Use // and % for floor division and reminder
+housing_ids = list(dict_input['parameters'].keys()) # create list with all housing ids
+rep = {}
+num_batch = np.ceil(len(housing_ids) / BATCH_SIZE) # calculate nb of batches --> take the ceil
+current_batch = 1
+
+for i in range(0, len(housing_ids), BATCH_SIZE):
+    list_ids = set(housing_ids[i:i+BATCH_SIZE]) # HERE IS THE BATCH PROCESS
+    print(
+        f'Starting predictions on batch [{current_batch}:{num_batch}] (batch size: {len(list_ids)})')
+    dict_input_new = {
+        'parameters': dict([(k, v) for k, v in dict_input['parameters'].items() if k in list_ids]),
+        'features': dict([(k, v) for k, v in dict_input['features'].items() if k in list_ids]),
+        'offer': dict([(k, v) for k, v in dict_input['offer'].items() if k in list_ids])
+    }
+    rep_batch = predict(dict_input_new, online)
+    rep = {**rep, **rep_batch} # concatenate two dicts
+    current_batch += 1
+
 
 ### SAVE
 # Save predictions in format used for competition scoring
