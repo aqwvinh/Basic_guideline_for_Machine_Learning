@@ -81,6 +81,7 @@ decompose_serie(df, "count", "additive", samples=1000, period=24)
 
 1. Convert timestamp to datetime and set it as index
 2. Drop datetime column and some feature engineering (Basic: create month,day, hour columns. Advanced: create lags/shifts to use previous data --> ```df['count_prev_week_same_hour'] = df['count'].shift(24*7))```
+3. Split dataset: train before validation before test cuz it ensures that test data are more realistic as they are collected **after training the model**
 4. Forecast using LBGM for example and show features importance
 
 ```
@@ -89,7 +90,7 @@ def train_time_series(df, target, horizon=24*7):
     X = df.drop(target, axis=1)
     y = df[target]
     
-    #take last week of the dataset for validation
+    #take last week of the dataset for validation (train set before)
     X_train, X_valid = X.iloc[:-horizon,:], X.iloc[-horizon:,:]
     y_train, y_valid = y.iloc[:-horizon], y.iloc[-horizon:]
     
