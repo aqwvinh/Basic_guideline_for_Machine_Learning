@@ -124,3 +124,14 @@ def train_time_series(df, target, horizon=24*7):
     sns.barplot(x=df_importances.importance, y=df_importances.feature, orient='h')
     plt.show()
 ```
+
+### Bonus
+
+Split manually data (70/20/10) cuz we shouldn't split data randomly --> keep training data = oldest
+
+```
+n = len(df)
+train_df = df[0:int(n*0.7)]
+val_df = df[int(n*0.7):int(n*0.9)]
+test_df = df[int(n*0.9):]
+```
