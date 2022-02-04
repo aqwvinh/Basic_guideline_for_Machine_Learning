@@ -135,3 +135,14 @@ train_df = df[0:int(n*0.7)]
 val_df = df[int(n*0.7):int(n*0.9)]
 test_df = df[int(n*0.9):]
 ```
+
+
+Normalize manually. use train mean and std. Make sure there are only numeric variables for this method
+```
+train_mean = train_df.mean()
+train_std = train_df.std()
+
+train_df = (train_df - train_mean) / train_std
+val_df = (val_df - train_mean) / train_std
+test_df = (test_df - train_mean) / train_std
+```
