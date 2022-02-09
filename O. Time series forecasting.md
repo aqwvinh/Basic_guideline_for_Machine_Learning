@@ -18,10 +18,10 @@ A given time series is thought to consist of three systematic components includi
 
 These components are defined as follows:
 
-Level/Observed: The average value in the series.
-<br>Trend: The increasing or decreasing value in the series. Trend is the moving average in the period.
-<br>Seasonality: The repeating short-term cycle in the series. Seasonality+Noise = observed/trend for multiplicative model or = observed-trend for additive and then average to retrieve the pure seasonality
-<br>Noise: The random variation in the series.
+**Level/Observed**: The average value in the series.
+<br>**Trend**: The increasing or decreasing value in the series. Trend is the moving average in the period.
+<br>**Seasonality**: The repeating short-term cycle in the series. Seasonality+Noise = observed/trend for multiplicative model or = observed-trend for additive and then average to retrieve the pure seasonality
+<br>**Noise**: The random variation in the series.
 
 **A series is thought to be an aggregate or combination of these four components.** That's why there are 2 models: additive and multiplicative.
 <br>For multiplicative model, *Time series value = trend component * seasonal component * noise component*
