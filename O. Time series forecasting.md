@@ -175,4 +175,8 @@ df['seasonNnoise'] = df['Retail_Sales']/df['trend']
 tmp_mean = df.groupby('month')['seasonNnoise'].mean().mean()
 df['season'] = df.groupby('month')['seasonNnoise'].transform("mean")/tmp_mean #Use transform to fill all the row per group with the result
 
+# Noise
+df['noise'] = df['seasonNnoise']/df['season]
+
+
 ```
