@@ -36,7 +36,7 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from matplotlib import pyplot
 
 # Function to decompose a target from df giving the possibility to select samples size and period
-def decompose_serie(df, target, model, samples, period):
+def decompose_serie(df, target, model="multiplicative", samples="all", period=1):
     if samples == 'all':
         #decomposing all time series timestamps
         res = seasonal_decompose(df[target].values, model=model, period=period)
