@@ -18,12 +18,14 @@ A given time series is thought to consist of three systematic components includi
 
 These components are defined as follows:
 
-Level: The average value in the series.
-<br>Trend: The increasing or decreasing value in the series.
-<br>Seasonality: The repeating short-term cycle in the series.
+Level/Observed: The average value in the series.
+<br>Trend: The increasing or decreasing value in the series. Trend is the moving average in the period.
+<br>Seasonality: The repeating short-term cycle in the series. Seasonality+Noise = observed/trend for multiplicative model or = observed-trend for additive and then average to retrieve the pure seasonality
 <br>Noise: The random variation in the series.
 
-**A series is thought to be an aggregate or combination of these four components.** That's why there are 2 models: additive and multiplicative
+**A series is thought to be an aggregate or combination of these four components.** That's why there are 2 models: additive and multiplicative.
+<br>For multiplicative model, *Time series value = trend component * seasonal component * noise component*
+
 
 ### Code
 
@@ -146,4 +148,30 @@ train_std = train_df.std()
 train_df = (train_df - train_mean) / train_std
 val_df = (val_df - train_mean) / train_std
 test_df = (test_df - train_mean) / train_std
+```
+
+Manually retrieve trend, saisonality and noise (to understand what is behing statsmodel.seasonal_decompose)
+```
+df = pd.read_csv('retail_sales_used_car_dealers_us_1992_2020.csv')
+fig = plt.figure(figsize=(15,5))
+# OBSERVED
+fig.suptitle("Observed")
+df['Retail_Sales'].plot()
+plt.show()
+
+# TREND.Compute moving average. We need to shift because the period is 12 months so we compute the average between the average with 6 months before the specific month and the average with 5 months before.
+df['Retail_Sales_shift'] =  df['Retail_Sales'].shift(-1)
+df['left_ma'] = df['Retail_Sales'].rolling(window=12, center=True).mean()
+df['right_ma'] = df['Retail_Sales_shift'].rolling(window=12, center=True).mean()
+df['trend'] = (df['left_ma'] + df['right_ma']) / 2
+fig = plt.figure(figsize=(15,5))
+fig.suptitle("Trend")
+df['trend'].plot()
+plt.show()
+
+# Saisonality. Compute the average of (saisonality and noise) components per period and divide by the average of all the average (to have a flat season at 1)
+df['seasonNnoise'] = df['Retail_Sales']/df['trend']
+tmp_mean = df.groupby('month')['seasonNnoise'].mean().mean()
+df['season'] = df.groupby('month')['seasonNnoise'].transform("mean")/tmp_mean #Use transform to fill all the row per group with the result
+
 ```
