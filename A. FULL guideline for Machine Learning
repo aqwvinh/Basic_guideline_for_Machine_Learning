@@ -192,6 +192,10 @@ df.insert(1, y_name, y). # Put at 2nd column
 # Find elements not in a list
 set(update_df.housing_id) - set(start_df.housing_id) # gives IDs from update_df that are not in start_df
 
+# Groupby and compute percentage within group / subgroup
+df_tmp = df.reset_index().groupby(['Country', 'City']).agg({'revenue':'sum'})
+df_tmp.groupby(level=0).apply(lambda x:100 * x / float(x.sum()))
+
 
 # Create dataframe using dictionary
 col = ['col1', 'col2', 'col3']
