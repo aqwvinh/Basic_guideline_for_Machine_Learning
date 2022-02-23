@@ -4,6 +4,7 @@ Import statsmodels requests
 ```
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.graphics.tsaplots import plot_acf
+import matplotlib.pyplot as plt
 ```
 
 Use `statsmodels` library to be able to decompose time series
@@ -33,9 +34,6 @@ These components are defined as follows:
 The function below shows how to decompose a series into trend, seasonal, and residual components assuming an additive model and plot the result.
 <br>```seasonal_decompose``` returns an **object** with trend, seasonal, residuals and observed attributes (each one is an array).
 ```
-from statsmodels.tsa.seasonal import seasonal_decompose
-from matplotlib import pyplot
-
 # Function to decompose a target from df giving the possibility to select samples size and period
 def decompose_serie(df, target, model="multiplicative", samples="all", period=1):
     if samples == 'all':
@@ -45,6 +43,7 @@ def decompose_serie(df, target, model="multiplicative", samples="all", period=1)
         #decomposing a sample of the time series (take the n-samples last ones)
         res = seasonal_decompose(df[target].values[-samples:], model=model, period=period)
     
+    #months = df['MOIS_ANNEE'].apply(lambda x: str(x)[0:7]).to_list() # if we want to change the labels for the x-axis
     observed = res.observed
     trend = res.trend
     seasonal = res.seasonal
@@ -53,24 +52,32 @@ def decompose_serie(df, target, model="multiplicative", samples="all", period=1)
     #plot the complete time series
     fig, axs = plt.subplots(4, figsize=(16,8))
     axs[0].set_title('OBSERVED', fontsize=16)
-    axs[0].plot(observed)
+    axs[0].plot(months,observed)
+    axs[0].tick_params(labelsize=10, rotation=45) # to control x_ticks
     axs[0].grid() # Add a grid on the subplot
+
     
     #plot the trend of the time series
     axs[1].set_title('TREND', fontsize=16)
     axs[1].plot(trend)
+    #axs[1].tick_params(labelsize=10, rotation=45)
     axs[1].grid()
     
     #plot the seasonality of the time series. Period=24 daily seasonality | Period=24*7 weekly seasonality.
     axs[2].set_title('SEASONALITY', fontsize=16)
     axs[2].plot(seasonal)
+    #axs[2].tick_params(labelsize=10, rotation=45)
     axs[2].grid()
     
     #plot the noise of the time series
     axs[3].set_title('NOISE', fontsize=16)
     axs[3].plot(residual)
     axs[3].scatter(y=residual, x=range(len(residual)), alpha=0.5)
+    #axs[3].tick_params(labelsize=10, rotation=45)
     axs[3].grid()
+    
+    # set the spacing between subplots
+    plt.subplots_adjust(hspace=1.2)
     
     plt.show()
 ```
