@@ -270,6 +270,16 @@ def convert_postal_code(x):
     
 df.col = df.col.map(convert_postal_code)
 
+# Find out how many different values for a specific column after a group by
+df_duplicates = df\
+        .reset_index()\
+        .groupby(['ANNEE','NUM_CONTRAT', 'MOIS_ANNEE', 'DEBUT_ECHEANCE', 'FIN_ECHEANCE'])['index']\
+        .agg(list)\
+        .reset_index(name='list_index')
+
+df_duplicates['len'] = df_duplicates['list_index'].str.len()
+df_duplicates.sort_values(by='len', ascending=False)
+
 
 # Delete only true duplicates
 train = train.drop_duplicates("col", keep = "first")
