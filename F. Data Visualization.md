@@ -28,12 +28,15 @@ ax.set_xlabel("Wine Quality", fontsize=16)
 ax.set_ylabel("Number", fontsize=16)
 ax.set_title("Nnumber of wine per quality", fontsize=18)
 ax.tick_params(axis='both', which='major', labelsize=14)  # Pour augmenter la taille de police des axes
+
 ```
 ```
 # Set the width and height of the figure
 plt.figure(figsize=(10,6))
 # Add title
 plt.title("Average Arrival Delay for Spirit Airlines Flights, by Month")
+# Choose the frequency of xticks
+plt.xticks(np.arange(0, len(x)+1, 3))
 # Bar chart showing average arrival delay for Spirit Airlines flights by month
 sns.barplot(x=flight_data.index, y=flight_data['target'])
 # Add label for vertical axis
