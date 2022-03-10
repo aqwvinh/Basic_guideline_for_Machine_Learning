@@ -184,6 +184,10 @@ df_quartier = df.groupby(['region','quartier']).agg(revenue_brut_sum = ('revenue
                                                     revenue_brut_night_mean = ('revenue_brut_moyen_night', 'mean'),
                                                     cluster_mode = ('cluster', lambda x: x.value_counts().index[0])).reset_index()
 
+# Groupby and show unique values within subgroup
+df.groupby("region")["departement"].apply(set).to_frame()
+
+
 # Move specific col to specific place. col = df.pop(col) => keep the col and remove it from df
 y_name = 'arnd'
 y = df.pop(y_name)
