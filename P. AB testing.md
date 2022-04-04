@@ -120,5 +120,7 @@ Additionally, if we look at the confidence interval for the treatment group `([0
 What this means is that it is more likely that the true conversion rate of the new design is similar to our baseline, rather than the 15% target we had hoped for. This is further proof that our new design is not likely to be an improvement on our old design
 
 
+## Bonus
 
+- Multivariate testing: more changes than A/B testing. More powerful but more difficult to implement and need more data
 
