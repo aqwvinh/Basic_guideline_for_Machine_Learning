@@ -123,4 +123,5 @@ What this means is that it is more likely that the true conversion rate of the n
 ## Bonus
 
 - Multivariate testing: more changes than A/B testing. More powerful but more difficult to implement and need more data
+- What to do if A/B test fails? ==> check H0, increase sample size/duration of test, check data measurements, check data quality
 
