@@ -142,6 +142,15 @@ corrmat = train.corr()
 plt.subplots(figsize=(12,9))
 sns.heatmap(corrmat, vmax=0.9, square=True)
 
+# Plot Spearman correlation (better than Pearson's cuz don't assume linear relationship and Gaussian distribution but less powerful when linearity)
+def display_correlation(df):
+    r = df.corr(method="spearman")
+    plt.figure(figsize=(10,6))
+    heatmap = sns.heatmap(df.corr(), vmin=-1, 
+                      vmax=1, annot=True)
+    plt.title("Spearman Correlation")
+    return(r)
+
 # Heatmap to check the features that contribute the most to the target variable
 import seaborn as sns
 k = 25 #number of variables for heatmap
