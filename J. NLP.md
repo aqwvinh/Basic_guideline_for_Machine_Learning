@@ -1,69 +1,89 @@
-Steps:
-0) Understand data
-1) Duplicates and relabel target if necessary
-2) Missing values
-3) Data cleaning
-4) Data vectorization (TF-IDF, Word2Vec and GloVe) and subsequent modeling
+# Tips for NLP projets
+
+Simple pratical steps:
+
+- Duplicates and relabel target if necessary
+- Missing values
+- Data cleaning
+- Data vectorization (TF-IDF, Word2Vec and GloVe) and subsequent modeling
 
 
-1) DUPLICATES AND RELABEL TARGET
-# Show duplicates that are have different labels
+#### Duplicates and relabel target
+Show duplicates that have different labels
+```
 df_mislabeled = train.groupby(['text']).nunique().sort_values(by='target', ascending=False)
 df_mislabeled = df_mislabeled[df_mislabeled['target'] > 1]['target']
 df_mislabeled.index.tolist()
+```
 
-# Correct label
+#### Correct label
+```
 train['target_relabeled'] = train['target'].copy() 
 train.loc[train['text'] == '1st duplicate text', 'target_relabeled'] = 0  # 0 is the example, choose manually for each duplicate
+```
 
-
-2) MISSING VALUES
-# Create a combined list to treat missing values once
+#### Missing values
+Create a combined list to treat missing values once
+```
 combine = [train, test]
-
-# Replace missing values in col1 and col2 with "Unknown" when it's appropriate
+```
+Replace missing values in col1 and col2 with "Unknown" when it's appropriate
+```
 for set in combine:
   set[["col1", "col2"]] = set[["col1", "col2"]].fillna("Unknown")
+```
 
-
-3) DATA CLEANING
-### Common functions to clean text: lowercase, URL, HTML, emoji, punctuation, twitter handles
-# To keep the train and test separation
+#### Data cleaning
+Common functions to clean text: **lowercase, URL, HTML, emoji, punctuation, twitter handles**
+To keep the train and test separation
+```
 ntrain = train.shape[0]
 ntest = test.shape[0]
 ntrain, ntest
+```
 
-# Create a concatenated df to clean data once
+Create a concatenated df to clean data once
+```
 df = pd.concat([train,test])
+```
 
-# Lowercase
+Lowercase
+```
 df['text']=df['text'].apply(lambda x : x.lower())  #import string if needed
+```
 
-# Remove accent
+Remove accent
+```
 pip install unidecode
 import unidecode
 df['text'].apply(lambda x: unidecode.unidecode(x))
+```
 
-# Remove URL
+Remove URL
+```
 import re
 def remove_URL(text):
     url = re.compile(r'https?://\S+|www\.\S+')
     return url.sub(r'',text)
 
 df['text']=df['text'].apply(lambda x : remove_URL(x))
-  
-# Remove HTML Tags
+```
+
+Remove HTML Tags
+```
 def remove_html(text):
     html=re.compile(r'<.*?>')
     return html.sub(r'',text)
+```
 
-# Remove multiple characters
+Remove multiple characters
+```
 def multiple_replace(dict, text):
   # Create a regular expression from the dictionary keys
   regex = re.compile("(%s)" % "|".join(map(re.escape, dict.keys())))
-
   # For each match, look-up corresponding value in dictionary
   return regex.sub(lambda x: dict[x.string[x.start():x.end()]], text) 
+  
 text = "X is THE goal of Y"
 dict = {
 "X" : "Mandanda",
@@ -71,8 +91,10 @@ dict = {
 "Y" : "Marseille",
 } 
 print(multiple_replace(dict, text))
+```
 
-# Remove emoji
+Remove emoji
+```
 def remove_emoji(text):
     emoji_pattern = re.compile("["
                            u"\U0001F600-\U0001F64F"  # emoticons
@@ -83,21 +105,27 @@ def remove_emoji(text):
                            u"\U000024C2-\U0001F251"
                            "]+", flags=re.UNICODE)
     return emoji_pattern.sub(r'', text)
-    
-# Remove punctuation
+```
+
+Remove punctuation
+```
 import string
 def remove_punct(text):
     table=str.maketrans('','',string.punctuation)
     return text.translate(table)
+```
     
-# remove twitter handles (@user)
+Remove twitter handles (@user)
+```
 def remove_pattern(input_txt, pattern):
     r = re.findall(pattern, input_txt)
     for i in r:
         input_txt = re.sub(i, '', input_txt)  
     return input_txt 
+```
     
-# Correct spelling (super long)
+Correct spelling (super long to run)
+```
 !pip install pyspellchecker
 from spellchecker import SpellChecker
 spell = SpellChecker()
@@ -110,13 +138,15 @@ def correct_spellings(text):
         else:
             corrected_text.append(word)
     return " ".join(corrected_text)
+```
 
-IMPORTANT !!
-# Resplit the processed train and test sets
+### Warning !
+Resplit the processed train and test sets
+```
 train = df[:ntrain]
 test = df[ntrain:]
 train.shape, test.shape  # Check if the shapes are good
-
+```
 
 4) DATA VECTORIZATION
 
