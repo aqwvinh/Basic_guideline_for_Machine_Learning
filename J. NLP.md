@@ -8,7 +8,7 @@ Simple pratical steps:
 - Data vectorization (TF-IDF, Word2Vec and GloVe) and subsequent modeling
 
 
-#### Duplicates and relabel target
+### Duplicates and relabel target
 Show duplicates that have different labels
 ```
 df_mislabeled = train.groupby(['text']).nunique().sort_values(by='target', ascending=False)
@@ -16,13 +16,13 @@ df_mislabeled = df_mislabeled[df_mislabeled['target'] > 1]['target']
 df_mislabeled.index.tolist()
 ```
 
-#### Correct label
+### Correct label
 ```
 train['target_relabeled'] = train['target'].copy() 
 train.loc[train['text'] == '1st duplicate text', 'target_relabeled'] = 0  # 0 is the example, choose manually for each duplicate
 ```
 
-#### Missing values
+### Missing values
 Create a combined list to treat missing values once
 ```
 combine = [train, test]
@@ -33,7 +33,7 @@ for set in combine:
   set[["col1", "col2"]] = set[["col1", "col2"]].fillna("Unknown")
 ```
 
-#### Data cleaning
+### Data cleaning
 Common functions to clean text: **lowercase, URL, HTML, emoji, punctuation, twitter handles**
 To keep the train and test separation
 ```
@@ -140,7 +140,7 @@ def correct_spellings(text):
     return " ".join(corrected_text)
 ```
 
-### Warning !
+#### Warning !
 Resplit the processed train and test sets
 ```
 train = df[:ntrain]
@@ -148,9 +148,10 @@ test = df[ntrain:]
 train.shape, test.shape  # Check if the shapes are good
 ```
 
-4) DATA VECTORIZATION
+ ### DATA VECTORIZATION
 
-A- Functions for tokenization and lemmatization then TF-IDF
+#### Functions for tokenization and lemmatization then TF-IDF
+```
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords, wordnet
@@ -182,7 +183,10 @@ def preprocessing_sentence(sentence):
     lemmatizer = WordNetLemmatizer()
     lemmatized_sentence = [lemmatizer.lemmatize(w_t[0], pos=w_t[1]) for w_t in tags]
     return lemmatized_sentence
-     
+```
+
+Further preprocessing steps
+```
 # Preprocessing on the train set. You also have to do it on the test set in the end
 df_train["tokens"] = df_train.text.apply(preprocessing_sentence) # create a new column "tokens" with the preprocessed text
 test["tokens"] = test.text.apply(preprocessing_sentence)
@@ -191,7 +195,7 @@ test["tokens"] = test.text.apply(preprocessing_sentence)
 X = df_train.tokens  # You have to gather all the text in one column
 y = df_train.label
 
-# split the dataset into training and validation datasets FOR BIG DATASETS. FOR SMALL DATASETS --> CROSS-VALIDATION
+# split the dataset into training and validation datasets
 X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test_size=0.25, random_state=0,
                                                    stratify=y) #random_state to have the same alea and strafify to have a balance in label
 
@@ -199,10 +203,12 @@ X_train, X_valid, y_train, y_valid = model_selection.train_test_split(X, y, test
 from sklearn.preprocessing import LabelEncoder
 encoder = LabelEncoder()
 y_train = encoder.fit_transform(y_train)
-y_valid = encoder.fit_transform(y_valid)
+y_valid = encoder.transform(y_valid)
+```
 
-
-### TF-IDF. You have to gather all the text in one column "tokens" first. For ML
+### TF-IDF 
+You have to gather all the text in one column "tokens" first. For ML
+```
 from sklearn.feature_extraction.text import TfidfVectorizer
 #Initialize vectorizer with identity analyzer
 vect = TfidfVectorizer(analyzer = lambda x: x, max_features = 3000)
@@ -212,7 +218,9 @@ X_train = vect.fit_transform(X_train)
 X_valid = vect.transform(X_valid)   # or X = vect.fit_transform(X) with small dataset then cross-validation
 # Display the tfidf_1gram:
 pd.DataFrame(X_train.toarray(), columns=vect.get_feature_names())
-
+```
+### Modeling
+```
 # Creating the models: adapt the selected models
 models = [LogisticRegression(random_state= 1), svm.SVC(random_state= 1), SGDClassifier(random_state= 1), GradientBoostingClassifier(random_state= 1), RandomForestClassifier(random_state= 1),
             XGBClassifier(random_state= 1), DecisionTreeClassifier(random_state= 1), BaggingClassifier(DecisionTreeClassifier(random_state=1)), LGBMClassifier(random_state= 1), AdaBoostClassifier(random_state= 1),
@@ -243,22 +251,16 @@ X_test = vect.transform(test.token)
 
 #Get predictions labels
 y_pred = best_model.predict(X_test)
-
-# Save predictions in format used for competition scoring
-output = pd.DataFrame({'id': test["id"],
-                       'target': y_pred})
-output.to_csv('SGD opti.csv', index=False)
-
-print("Your submission was successfully saved!")
+```
 
 
-
-B- WORD2VEC
+### WORD2VEC
 Word2Vec creates a dense representation for each word, such that words appearing in similar contexts have similar vectors. 
-To get an embedding for the entire tweet, the mean of all vectors for the words in the tweet are taken. 
-The assumption now is that similar tweets have similar vectors.
+<br>To get an embedding for the entire tweet, the mean of all vectors for the words in the tweet are taken. 
+<br>The assumption now is that similar tweets have similar vectors.
 
 Start with
+```
 !python -m spacy download en_core_web_lg  #Then once it is downloaded, restart the workin environment and comment this line
 
 # Importation
@@ -294,18 +296,20 @@ print('Shape of test set: {}'.format(X_test.shape))
 
 # create target
 y_train = train.target.copy()
+```
 
 
 ### TIPS: Create Machine Learning Pipeline
 Creating a pipeline is important to have a robust workflow. 
-It ensures that all preprocessing steps that are learned on data are done within the cross-validation, to ensure that no data is leaked to the model.
+<br>It ensures that all preprocessing steps that are learned on data are done within the cross-validation, to ensure that no data is leaked to the model.
 
 In this case, it doesn't add much value since the only step in the pipeline is an estimator (here a logistic regression). 
-However, since it's useful for pipelines with data preprocessing steps that are learned on data, such standard scaling.
+<br>However, since it's useful for pipelines with data preprocessing steps that are learned on data, such standard scaling.
 
 One advantage even when just using an estimator is that I can treat the estimator like a hyperparameter in the grid search.
 
-### WORD2VEC BASELINE WITH LOG REG 
+#### WORD2VEC BASELINE WITH LOG REG 
+```
 # create machine learning pipeline
 word2vec_pipe = Pipeline([('estimator', LogisticRegression())])
 # cross validate
@@ -353,15 +357,12 @@ word2vec_grid_search_results[cols].head(10)
 
 # predict on test set with the best model from the randomized search
 pred = word2vec_grid_search.predict(X_test)
-
-# submit prediction
-sub=pd.DataFrame({'id':test['id'],'target':y_pred})
-sub.to_csv('submission.csv',index=False)
-print("Your submission was successfully saved!")
+```
 
 
-C- GLOVE for vectorization for LSTM. 
-# You have to upload to your environment the file glove.6B.100d. For DL. Long and not efficient
+### GLOVE for vectorization for LSTM. 
+You have to upload to your environment the file glove.6B.100d. For DL. Long and not efficient
+```
 from tqdm import tqdm
 from nltk.tokenize import word_tokenize
 import nltk
@@ -400,9 +401,10 @@ for word,i in tqdm(word_index.items()):
     emb_vec=embedding_dict.get(word)
     if emb_vec is not None:
         embedding_matrix[i]=emb_vec
-        
+```      
 
 ### Baseline Model: LSTM
+```
 embedding_dim = 100
 model=Sequential()
 
@@ -440,6 +442,4 @@ plt.show();
 # Make predictions on test
 y_pred=model.predict(test_LSTM)
 y_pred=np.round(y_pred).astype(int).reshape(3263)
-sub=pd.DataFrame({'id':test['id'],'target':y_pred})
-sub.to_csv('submission.csv',index=False)
-print("Your submission was successfully saved!")
+```
