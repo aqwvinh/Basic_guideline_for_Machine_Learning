@@ -209,6 +209,17 @@ set(update_df.housing_id) - set(start_df.housing_id) # gives IDs from update_df 
 df_tmp = df.groupby(['Country', 'City']).agg({'revenue':'sum'})
 df_tmp.groupby(level=0).apply(lambda x:100 * x / float(x.sum()))
 
+# Groupby weighted average
+
+# Custom function for weighted average
+def my_w_avg(s, df, wcol):
+    return np.average(s, weights=df.loc[s.index, wcol])
+    
+df_agg = df.groupby(groupby_cols).agg(
+                                VOLUME = ('VOLUME', 'sum'),
+                                weights = ('weights', 'mean'),
+                                score = ('score', functools.partial(my_w_avg, df=df, wcol='weights')),
+                                ).reset_index()
 
 # Create dataframe using dictionary
 col = ['col1', 'col2', 'col3']
