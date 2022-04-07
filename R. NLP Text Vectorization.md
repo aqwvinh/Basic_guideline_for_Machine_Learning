@@ -100,17 +100,49 @@ Distance in the high-dimensional space of Word2vec is measured by **cosine simil
 - Assume a sub-linear relationship into the vector space of words
 
 
-### BERT and Transformers
+### BERT and Transformers ==> no RNN, only Attention
 BERT for “Bidirectional Encoder Representations from Transformers”, created to overcome the limitations of Word2Vec 
 <br>BERT is able to produce contextualized word vectors by encoding a word’s position in the text in addition to the word itself.
 <br>BERT’s success is based on its **Transformer architecture**, as well as the **vast amounts of data that it uses to learn**. During training, BERT “reads” the entire English-language Wikipedia and the BooksCorpus, a large collection of unpublished novels.
 
 *How it works*:
 - Transformers structure ==> Every output element is connected to every input element, and the weightings between them are dynamically calculated based upon their connection. (In NLP, this process is called attention.). Transformers **don't need to process data with an order** (VS RNN and CNN that require sequences of data)
+- **Unlike LSTM, Transformers don't imply any RNN**, they only need **attention**. 
 - VS previous methods, BERT can read in both directions at once ==> that's why **bidirectional**
 - Pre-trained on **two different taks**: Masked Language Modeling (MLM) and Next Sentence Prediction (NSP). 
 - - Quickly, MLM ==> hide a word in a sentence and then have the program predict what word has been hidden (masked) based on the hidden word's context. 
 - - NSP ==> have the program predict whether two given sentences have a logical, sequential connection or whether their relationship is simply random.
-- D
+
+**Attention** is structural for transformers ==> context
+- The attention-mechanism looks at an input sequence and decides at each step which other parts of the sequence are important
+- Ex: When reading a text, it focuses on the word it reads **while** thinking about the other important words that it read to **provide context**
+- It's very powerful for Seq2Seq models because it **helps the communication between the Encoder and the Decoder by giving the Decoder a context**
+- Ex: for translation, the Encoder will give the regular translation (in English in the previous ex) but **with important keywords** that will help the Decoder to translate knowing the context. The Decoder will know which parts of the sentence are impotant and which key terms give the sentence context
+- **Concretely**, Attention is a **vector** that gives at **each step** of the decoding process **direct connection** to specific parts of the encoder. After a softmax function, the Attention can weight by importance the different parts of the input.
+- Before Attention, translation was made by reading the whole text and then translate ==> information loss
  
+ 
+#### Bonus
+##### Seq2Seq ==> Encoder-Decoder for sequence
+- Sequence-to-Sequence (or Seq2Seq) is a neural net that transforms a given sequence of elements, such as the sequence of words in a sentence, into another sequence. Good at **translation**, especially using a **LSTM** because it's **sequence-dependent data**. 
+- **LSTM** can give the meaning to the sequence while remembering what it's important. So, **LSTM is a Seq2Seq model**.
+- Seq2seq models consis of an **Encoder and Decoder**.
+- - Encoder takes the **input sequence** and **maps** it into a higher dimension space (n-dimension vector)
+- - Decoder takes this **abstract vector** as an input and turns it into an **output sequence**
+- Encoder and Decoder can communicate **like a common language**. Ex: 1 French and 1 German speak each other in English
+- Training: the input for the decoder is **shifted** so that the model doesn't learn how to copy but to predict the next word, knowing the encoder sequence and a particular decoder sequence
+- Hence, a Seq2Seq model can be reinforced by Attention ==> it will translate the first paragraph, then the second etc, instead of readince all at once
+
+##### LSTM ==> persistence memory cuz 3 gates structure (Forget, Input, Output)
+Advanced RRN because **persistence of information**
+- Tackle the vanishing gradient and exploding gradient problems
+- Structure: **3 gates** ==> Forget gate, Input gate and Output gate. Forget: select whether the info coming from the previous step is to be remembered or to be forgotten. Input: learn new information from the input. Output: pass the updated information from the current to the next step
+- Just like simple RRN, LSTM has **hidden state and cell state**. Hidden state is the Short term memory and cell state the Long term memory ==> hence the name Long-Short term memory
+
+
+##### Text summarization
+Different methods:
+- Extractive approach ==> extract sentences from the text based on a **scoring function** to form a coherent summary. Easy and grammatically good
+- Abstractive approach ==> generate a new text. Need to understand the text first. More difficult. You can use Seq2Seq with Attention to better understand the meaning. **Limitations**: Repetition 
+
  
