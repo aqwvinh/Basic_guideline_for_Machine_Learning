@@ -17,9 +17,20 @@ Let's say p and p0 new and old metric (such as conversion rate)
 <br>H0: p = p0 ==> no effect
 <br>H: p ≠ p0 ==> so < or >
 
-B. Choose a **confidence level**, usually alpha=5% for a confidence of 95%
+B. Choose the **statistical test**
+- Numerical data
+- - Comparison: **T-test** when comparing the **means of two groups** (if more than two groups ==> ANOVA test) and you **estimate the sample std**. When you know the population std, you should use **Z-test**. Usually, we don't have the population std so we use T-test. The difference is that **T-test has heavier tails** than the normal distribution to compensate for the higher uncertainty because we estimate the std. Ex: for A/B testing on revenue ==> use independent T-test. 
+<br>So calculate the value of T (using the formula) then compare the absolute value of t-value to a value obtained from a critical value table (available in one-tail and two-tails formats), if |t| > the critical value, we reject the null hypothesis so there may be a significant change. The critical value depends on the **degree of freedom** and **the confidence level**. The t-test estimates the true difference between two group means using the ratio of the difference in group means over the pooled standard error of both groups.
+<br>Difference between **paired t-test** and **independent t-test** ==> if the two groups come from the same population (before/after) than it's paired. Otherwise it's independent. Difference between **one-tailed** and **two-tailed** ==> if you want to know if one population mean is greater than or less than the other, it's one-tailed. If you only care wheather the two populations are different from one another, it's a two-tailed test
+<br>Present the results: **t-value, p-value and degrees of freedom**.
+- - Correlation: **Pearson** or **Spearman**
+- Categorical data
+- - **Chi-square** (two groups)
+- - **Fisher** (two groups) 
 
-C. Choose the **variables**: 
+C. Choose a **confidence level**, usually alpha=5% for a confidence of 95%
+
+D. Choose the **variables**: 
 
 *Independent variable*
 <br>usually split in two groups:
@@ -30,13 +41,13 @@ C. Choose the **variables**:
 <br>It's what we are trying to measure. Example: for the conversion rate, we can set 1 if the user buys and 0 if not
 <br>Then it's easy to calculate the mean of each group
 
-D. Choose a **sample size**
+E. Choose a **sample size**
 
 We can use the *power analysis* to calculate the sample size, using python
 <br>We have to determine in advance:
 - Power of the test (probability of finding a statistical difference when there is actually one - usually set to 0.8)
 - Confidence: alpha = 5%
-- Effect size: how big of a difference we expect from the results? In this example, we can use 13% (old) and 15% (target)
+- Effect size: how big of a difference we expect from the results? In this example, we can use 13% (old) and 15% (target). The effect size is independent of the sample size ==> it shows the **pratical significance** in the real world. The most common effect sizes are *Cohen's d* and *Pearson's r*. Cohen's d is designed for comparing two groups: d = (xbar1 - xbar2)/std. Multiple choices for std (from both groups or the std of the control group). Pearson's r ranges between -1 and 1 and  measures how much of the variability of one variable is determnied by the variability of the other variable
 
 
 ```
