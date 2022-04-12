@@ -774,9 +774,14 @@ cat_features = ['MSSubClass', 'MSZoning', 'Street',
        'SaleType',
        'SaleCondition']
 
+le_name_mapping = {}
 for feature in cat_features:
   enc = LabelEncoder()
   all_data[feature] = enc.fit_transform(all_data[feature])   # Not the best way but i've to find better one. Not good to fit the encoder on test
+  # Keep mapping
+  le_name_mapping[feature]= dict(zip(enc.classes_, enc.transform(enc.classes_)))
+    
+
 
 
 # Using Robust Scaler to transform X_train. Aim: scale features to be robust to outliers
