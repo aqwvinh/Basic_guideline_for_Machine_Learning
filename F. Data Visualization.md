@@ -200,3 +200,58 @@ def plot_res(id, date_min, date_max):
     
     plt.show()
 ```
+
+
+## 9. Bonus
+
+```
+# Create plot function
+def plot_prediction(df, id):
+    
+    df_plot_pred = df[df.id == id].sort_values('month')
+    df_plot_pred.month = df_plot_pred.month.apply(lambda x: x[0:7])
+    
+    dates = list(df_plot_pred.month.values)
+    volexe = list(df_plot_pred['target'].values)
+    max_vol = df_plot_pred.target.max()
+    preds = list(df_plot_pred['prediction'].values)
+    dummy = list(df_plot_pred['dummy_val'].values)
+    max_preds = df_plot_pred.prediction.max()
+    
+    df_plot_score = df_plot_pred[(df_plot_pred.month >= "2021-03-01") & (df_plot_pred.month <= "2022-02-01")]
+    volexe_score = list(df_plot_score['target'].values)
+    preds_score = list(df_plot_score['prediction'].values)
+    dummy_score = list(df_plot_score['dummy_val'].values)
+    
+    def nrmse_mean(ytrue, ypred):
+        return np.sqrt(mean_squared_error(ytrue, ypred))/(np.mean(ytrue))
+    
+    def r2_function(ytrue, ypred):
+        return r2_score(ytrue, ypred)
+    
+    rmse_score = nrmse_mean(volexe_score, preds_score)
+    rmse_dummy = nrmse_mean(volexe_score, dummy_score)
+    r2_metric = r2_function(volexe_score, preds_score)
+    r2_dummy = r2_function(volexe_score, dummy_score)
+
+    fig, ax = plt.subplots(figsize=(15, 2.8))
+    line1, = ax.plot(dates, volexe, color = "black", lw=8, alpha=0.6)
+    line2, = ax.plot(dates, preds, color = "red", lw=8, alpha=0.6)
+    line3, = ax.plot(dates, dummy, color = "lightblue", lw=8, alpha=0.6)
+    try:
+        plt.ylim([-10, max(max_vol, max_preds)*1.1])
+    except:
+        plt.ylim([-10, 1000])
+    #ax.set_ylabel('Target')
+    #ax.set_xlabel('Date')
+    plt.yticks(fontsize= 15)
+    plt.xticks(fontsize= 15)
+    plt.xticks(rotation = 10)
+    loc = plticker.MultipleLocator(base=5.0) # this locator puts ticks at regular intervals
+    ax.xaxis.set_major_locator(loc)
+
+    plt.title(f"Predictions versus target: {fdm}", fontsize=15)
+    ax.legend([line1, line2, line3], ['Observed Target', 'Prediction with advanced model', 'Prediction with dummy'], fontsize=15, loc='best')# handleheight=3, handlelength=6, markerscale=0.8)
+    print("RMSE and R2 for advanced and dummy models:", rmse_score, r2_metric, rmse_dummy, r2_dummy)
+    plt.show()
+```
