@@ -204,8 +204,8 @@ def plot_res(id, date_min, date_max):
 
 ## 9. Bonus
 
+Create plot function
 ```
-# Create plot function
 def plot_prediction(df, id):
     
     df_plot_pred = df[df.id == id].sort_values('month')
