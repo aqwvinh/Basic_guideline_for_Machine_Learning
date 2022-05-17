@@ -600,6 +600,9 @@ for dataset in combine:
 # HOUSE PRICING. Create a variable for the total size of the house. Try to group correlated variables
 all_data["tot_surface"] = all_data["TotalBsmtSF"] + all_data["1stFlrSF"] + all_data["2ndFlrSF"]
 
+# Feature engineering for time series
+df['rolling_average_volume_past_3_months'] = df.sort_values(['id', 'month']).groupby(['id'])['target'].apply(lambda x: x.shift().rolling(3).mean())
+
 
 ### TO GO FURTHER: CHECK NORMALITY. The variables should be normal
 from scipy import stats
@@ -781,6 +784,47 @@ for feature in cat_features:
   # Keep mapping
   le_name_mapping[feature]= dict(zip(enc.classes_, enc.transform(enc.classes_)))
     
+
+# Hierarchical label clustering
+from scipy import stats
+from scipy.cluster.hierarchy import dendrogram, linkage
+
+from sklearn.cluster import AgglomerativeClustering
+
+def hc_label_encoding(df, feature):
+
+    def pearson_dist(x, y):
+        r = stats.pearsonr(x, y)[0]
+        return (1 - abs(r))
+
+    def encode_espece(df):
+        data = pd.pivot_table(data=df,columns="month",values="target",index=feature).fillna(0)
+        data = data.loc[(data.transpose().sum()!=0)] # on retire les lignes nulles (corrélation non définie)
+        distance_matrix = data.transpose().corr().applymap(lambda x:1-x)
+
+        k=len(data.index)
+        
+        model = AgglomerativeClustering(
+            n_clusters=k,
+            affinity = "precomputed",
+            linkage = "average",
+            distance_threshold=None,
+            compute_distances = True
+        )
+        clustering = model.fit(distance_matrix)
+        #Labels est le nouvel encodage
+        labels = clustering.labels_
+        data["cluster"]=labels
+        return labels,data
+
+    df_hc_label = df[df.level == level_chosen]
+    labels,data = encode_espece(df_hc_label)
+    data = data.reset_index()
+    df_cluster_feature = data[[f'{feature}', "cluster"]]
+
+    return df_cluster_feature
+    
+   
 
 
 
@@ -991,6 +1035,94 @@ y_pred = np.exp(best_model.predict(X_test_scaled))  # If we've applied log to no
 or
 y_pred = le.inverse_transform(best_model.predict(X_test_scaled))  # If we have encoded the label before
 
+
+# Rolling prediction
+def rolling_predict_next_month(
+    df, start_month_order, end_month_order, 
+    enc_method, cols_to_encode, l_enc_dict,
+    training_columns, model):
+    """
+    Make predictions for the next month and use this prediction for feature engineering ==> rolling predictions
+    """
+    
+    for i in range(start_month_order, end_month_order):
+        # Feature Engineering
+        df_feat_eng = feat_engine(df[(0+i <= df.month_order) & (df.month_order <= 24+i)]).drop('index', axis=1)
+        # Encoding
+        df_prepro_enc, le_name_mapping = encoding(df_feat_eng, enc_method, cols_to_encode, l_enc_dict)
+        
+        # Make predictions only for the next month
+        df_pred = df_feat_eng[df_feat_eng.month_order == 24+i]
+        df_pred_enc = df_prepro_enc[df_prepro_enc.month_order == 24+i]
+
+        try:
+            assert (df_pred_enc.month_order.unique()[0] == 24+i) & (len(df_pred_enc.month_order.unique()) == 1)
+        except:
+            print(f"Supposed to only have: {24+i}")
+            print(f"But we have: {df_pred_enc.month_order.unique()}")
+            break
+            
+        current_cols_retain_or_drop = list(set(training_columns) & set(df_pred_enc.columns))
+ 
+        X_test = df_pred_enc[current_cols_retain_or_drop]
+        y_test = df_pred_enc['target'].values
+        
+        # Make predictions and replace target by predictions
+        try:
+            df_pred['target'] = model.predict(X_test)
+        except:
+            print(f'ERROR when predict! {X_test.describe()}')
+            break
+            
+        if i == 0:
+            df_pred_output = df_pred
+        else:
+            df_pred_output = pd.concat((df_pred_output, df_pred)
+
+        # Update df with pred
+        cols_feat_eng = list(set(df_pred.columns)- set(df.columns))
+        df = pd.concat((df[df.month_order != 24+i], df_pred.drop(cols_feat_eng, axis=1)))
+    
+    df_pred_output = df_pred_output.rename(columns={'target':'prediction'})
+    
+    return df_pred_output
+    
+    
+# Store experiments results to MLflow
+def store_mlflow(model, training_columns, rmse_score, r_score, nrmse_mean_score, nrmse_minmax_score:
+    # Set tracking locally
+    mlflow.set_tracking_uri(
+        "file://"
+        + os.path.expanduser(
+            "/Users/X/Desktop/Projets/Project_name/mlruns"
+        )
+    )
+    # Set mlflow experiment
+    mlflow.set_experiment("Project_name")
+    # Start a mflow run and specify experiment_id and run_name=name of the model
+    run = mlflow.start_run(
+        experiment_id=0,
+        run_name=type(model).__name__,
+    )
+    
+    # Log training features
+    mlflow.log_param("training_columns", training_columns)
+    # Store selected params
+    try:
+        params_mlflow = ['max_depth', 'max_leaf_nodes', 'min_impurity_decrease', 'min_samples_leaf', 'min_samples_split', 'min_weight_fraction_leaf', 'n_estimators']
+        dict_params = { key: model.get_params()[key] for key in params_mlflow }
+        mlflow.log_params({**dict_params})
+    except:
+        pass
+    # Log metrics
+    mlflow.log_metric("RMSE", rmse_score)
+    mlflow.log_metric("NRMSE_mean", nrmse_mean_score)
+    mlflow.log_metric("NRMSE_minmax", nrmse_minmax_score)
+    mlflow.log_metric("R2", r_score)
+    # Log model
+    mlflow.sklearn.log_model(model, "model")
+    # End run
+    mlflow.end_run()
 
 ### EVALUATION
 from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
