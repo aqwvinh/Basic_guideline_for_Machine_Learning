@@ -255,3 +255,28 @@ def plot_prediction(df, id):
     print("RMSE and R2 for advanced and dummy models:", rmse_score, r2_metric, rmse_dummy, r2_dummy)
     plt.show()
 ```
+
+
+Plot features importance
+```
+def plot_features_importance(cols_train, model):
+    # settings
+    plt.style.use('seaborn')
+    plt.rcParams["figure.figsize"] = (4, 4)
+
+    # Show feature importance
+    l_train_features = cols_train
+    feat_names = []
+    feat_importance = []
+    for i in model.feature_importances_.argsort()[-8:]:
+        feat_names.append(l_train_features[i])
+        feat_importance.append(model.feature_importances_[i])
+
+    fig, ax = plt.subplots(figsize=(10, 6))
+
+    plt.barh(feat_names, feat_importance)
+    ax.set_xlabel('Coeff Importance', fontsize=20)
+    plt.yticks(fontsize= 20)
+    plt.xticks(fontsize= 14)
+    plt.show()
+```
